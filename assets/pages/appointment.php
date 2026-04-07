@@ -274,7 +274,6 @@ $services_query = mysqli_query($con, "
                 <?php while($employee = mysqli_fetch_assoc($employees_query)): ?>
                   <option value="<?= $employee['employee_id']; ?>">
                     <?= htmlspecialchars($employee['first_name'] . ' ' . $employee['last_name']); ?> 
-                    (<?= htmlspecialchars($employee['position']); ?>)
                   </option>
                 <?php endwhile; ?>
               </select>
@@ -287,7 +286,7 @@ $services_query = mysqli_query($con, "
                 <option value="">Select a service</option>
                 <?php while($service = mysqli_fetch_assoc($services_query)): ?>
                   <option value="<?= $service['service_id']; ?>">
-                    <?= htmlspecialchars($service['service_name']); ?> - ₱<?= number_format($service['price'], 2); ?>
+                    <?= htmlspecialchars($service['service_name']); ?>
                   </option>
                 <?php endwhile; ?>
               </select>

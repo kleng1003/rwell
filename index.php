@@ -267,7 +267,7 @@ function getIconColor($category) {
     <h1>Welcome to R-Well Salon & Spa</h1>
     <p>Experience luxury, beauty, and relaxation at its finest</p>
     <a href="#booking" class="btn btn-book btn-lg text-white mt-3 px-4 py-2">
-      <i class="bi bi-calendar-check"></i> Book an Appointment ijouijmi,
+      <i class="bi bi-calendar-check"></i> Book an Appointment
     </a>
   </div>
 </section>
@@ -285,9 +285,9 @@ function getIconColor($category) {
             <div class="card service-card w-100">
               <div class="card-body d-flex flex-column">
                 <div class="text-center">
-                  <div class="service-icon <?php echo getIconColor($service['category'] ?? ''); ?>">
+                  <!-- <div class="service-icon <?php echo getIconColor($service['category'] ?? ''); ?>">
                     <i class="bi <?php echo getServiceIcon($service['service_name'], $service['category'] ?? ''); ?>"></i>
-                  </div>
+                  </div> -->
                   <h4 class="mt-3 mb-2"><?php echo htmlspecialchars($service['service_name']); ?></h4>
                   <div class="duration-badge">
                     <i class="bi bi-clock"></i> <?php echo $service['duration']; ?> minutes
@@ -302,11 +302,11 @@ function getIconColor($category) {
                     ?>
                   </p>
                 </div>
-                <div class="service-footer text-center mt-auto">
+                <!-- <div class="service-footer text-center mt-auto">
                   <a href="./assets/pages/appointment.php?service=<?php echo $service['service_id']; ?>" class="btn btn-service-book">
                     <i class="bi bi-calendar-plus"></i> Book Now
                   </a>
-                </div>
+                </div> -->
               </div>
             </div>
           </div>
@@ -390,7 +390,7 @@ function getIconColor($category) {
             <div class="col-md-4 mb-3">
               <i class="bi bi-geo-alt-fill fs-1 text-primary"></i>
               <h6 class="mt-2">Visit Us</h6>
-              <p class="text-muted">123 Main St, Metro Manila</p>
+              <p class="text-muted">Rizal, Cabugao, Ilocos Sur</p>
             </div>
           </div>
           <div class="mt-3">
