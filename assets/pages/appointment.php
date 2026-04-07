@@ -274,6 +274,7 @@ $services_query = mysqli_query($con, "
                 <?php while($employee = mysqli_fetch_assoc($employees_query)): ?>
                   <option value="<?= $employee['employee_id']; ?>">
                     <?= htmlspecialchars($employee['first_name'] . ' ' . $employee['last_name']); ?> 
+                    (<?= htmlspecialchars($employee['position']); ?>)
                   </option>
                 <?php endwhile; ?>
               </select>
@@ -286,7 +287,7 @@ $services_query = mysqli_query($con, "
                 <option value="">Select a service</option>
                 <?php while($service = mysqli_fetch_assoc($services_query)): ?>
                   <option value="<?= $service['service_id']; ?>">
-                    <?= htmlspecialchars($service['service_name']); ?>
+                    <?= htmlspecialchars($service['service_name']); ?> - ₱<?= number_format($service['price'], 2); ?>
                   </option>
                 <?php endwhile; ?>
               </select>
@@ -341,10 +342,16 @@ document.addEventListener('DOMContentLoaded', function() {
     validRange: { start: new Date().toISOString().split('T')[0] },
     selectable: true,
     headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
-    // Return empty array to remove all displayed appointments from calendar slots
     events: function(info, successCallback, failureCallback) {
-      // Return empty array - no appointments will be displayed on calendar
-      successCallback([]);
+      fetch('get_appointments.php')
+        .then(response => response.json())
+        .then(data => {
+          successCallback(data);
+        })
+        .catch(error => {
+          console.error('Error fetching appointments:', error);
+          successCallback([]);
+        });
     },
     eventColor: '#e91e63',
     dateClick: function(info) {
@@ -455,9 +462,6 @@ document.getElementById('appointmentForm').addEventListener('submit', function(e
                 this.reset();
                 document.getElementById('timeSlots').innerHTML = '<div class="text-muted">Select a date first</div>';
                 
-                // Note: Calendar events are disabled - no appointment will be added to calendar display
-                // Uncomment the lines below if you want to add the appointment back to calendar after booking
-                /*
                 const eventTitle = firstName + ' ' + lastName + ' - Appointment';
                 const eventStart = selectedDate + 'T' + time;
                 calendar.addEvent({
@@ -465,7 +469,6 @@ document.getElementById('appointmentForm').addEventListener('submit', function(e
                     start: eventStart,
                     color: '#e91e63'
                 });
-                */
             } else {
                 alert('Error: ' + data.message);
             }

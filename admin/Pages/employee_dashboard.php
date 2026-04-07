@@ -175,11 +175,11 @@ $completed_count = mysqli_fetch_assoc($completed_count)['total'];
             <h1>
                 <i class="fas fa-user-tie"></i> Welcome, <?= htmlspecialchars($employee_name); ?>!
             </h1>
-            <!-- <p>
+            <p>
                 <i class="fas fa-briefcase"></i> <?= htmlspecialchars($employee_position); ?> 
                 | <i class="fas fa-calendar-alt"></i> <?= date('l, F j, Y'); ?>
                 | <i class="fas fa-clock"></i> <?= date('h:i A'); ?>
-            </p> -->
+            </p>
         </div>
     </div>
 </div>

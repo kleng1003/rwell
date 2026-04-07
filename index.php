@@ -292,9 +292,9 @@ function getIconColor($category) {
                   <div class="duration-badge">
                     <i class="bi bi-clock"></i> <?php echo $service['duration']; ?> minutes
                   </div>
-                  <div class="price-tag">
+                  <!-- <div class="price-tag">
                     ₱<?php echo number_format($service['price'], 2); ?>
-                  </div>
+                  </div> -->
                   <p class="service-description">
                     <?php 
                     $desc = htmlspecialchars($service['description']);
@@ -302,11 +302,11 @@ function getIconColor($category) {
                     ?>
                   </p>
                 </div>
-                <!-- <div class="service-footer text-center mt-auto">
+                <div class="service-footer text-center mt-auto">
                   <a href="./assets/pages/appointment.php?service=<?php echo $service['service_id']; ?>" class="btn btn-service-book">
                     <i class="bi bi-calendar-plus"></i> Book Now
                   </a>
-                </div> -->
+                </div>
               </div>
             </div>
           </div>
