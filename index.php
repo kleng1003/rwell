@@ -302,11 +302,11 @@ function getIconColor($category) {
                     ?>
                   </p>
                 </div>
-                <div class="service-footer text-center mt-auto">
+                <!-- <div class="service-footer text-center mt-auto">
                   <a href="./assets/pages/appointment.php?service=<?php echo $service['service_id']; ?>" class="btn btn-service-book">
                     <i class="bi bi-calendar-plus"></i> Book Now
                   </a>
-                </div>
+                </div> -->
               </div>
             </div>
           </div>

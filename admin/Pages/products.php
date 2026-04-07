@@ -368,7 +368,7 @@ $categories = mysqli_query($con, "SELECT DISTINCT category FROM products WHERE c
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label><i class="fas fa-dollar-sign"></i> Price <span class="text-danger">*</span></label>
+                                <label> Price <span class="text-danger">*</span></label>
                                 <input type="number" step="0.01" name="price" class="form-control" required min="0">
                             </div>
                         </div>

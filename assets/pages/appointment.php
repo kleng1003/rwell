@@ -270,11 +270,11 @@ $services_query = mysqli_query($con, "
             <div class="form-group">
               <label><i class="bi bi-person-badge"></i> Preferred Staff</label>
               <select class="form-select" id="employeeId" name="employee_id">
-                <option value="">Any Available Staff</option>
+                <option value="">-- Select --</option>
                 <?php while($employee = mysqli_fetch_assoc($employees_query)): ?>
                   <option value="<?= $employee['employee_id']; ?>">
                     <?= htmlspecialchars($employee['first_name'] . ' ' . $employee['last_name']); ?> 
-                    (<?= htmlspecialchars($employee['position']); ?>)
+              
                   </option>
                 <?php endwhile; ?>
               </select>
@@ -287,7 +287,7 @@ $services_query = mysqli_query($con, "
                 <option value="">Select a service</option>
                 <?php while($service = mysqli_fetch_assoc($services_query)): ?>
                   <option value="<?= $service['service_id']; ?>">
-                    <?= htmlspecialchars($service['service_name']); ?> - ₱<?= number_format($service['price'], 2); ?>
+                    <?= htmlspecialchars($service['service_name']); ?>
                   </option>
                 <?php endwhile; ?>
               </select>
