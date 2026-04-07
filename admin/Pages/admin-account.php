@@ -254,7 +254,7 @@ $employee_count = mysqli_fetch_assoc($employee_count)['total'];
                                             <div>
                                                 <strong><?= htmlspecialchars($row['first_name'] . ' ' . $row['last_name']); ?></strong>
                                                 <br>
-                                                <small class="text-muted"><?= htmlspecialchars($row['position']); ?></small>
+                                                <!-- <small class="text-muted"><?= htmlspecialchars($row['position']); ?></small> -->
                                             </div>
                                         <?php elseif ($row['role'] == 'employee' && !$row['employee_id']): ?>
                                             <span class="text-muted">No employee record linked</span>
