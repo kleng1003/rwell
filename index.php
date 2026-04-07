@@ -267,7 +267,7 @@ function getIconColor($category) {
     <h1>Welcome to R-Well Salon & Spa</h1>
     <p>Experience luxury, beauty, and relaxation at its finest</p>
     <a href="#booking" class="btn btn-book btn-lg text-white mt-3 px-4 py-2">
-      <i class="bi bi-calendar-check"></i> Book an Appointment
+      <i class="bi bi-calendar-check"></i> Book an Appointment ijouijmi,
     </a>
   </div>
 </section>
