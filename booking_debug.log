@@ -233,3 +233,25 @@ Appointment created: ID 15
 Inserting service: INSERT INTO customer_services (customer_id, service_id, appointment_id) 
                           VALUES ('7', '7', '15')
 SUCCESS: Booking completed
+2026-04-07 17:02:56 - POST Data: Array
+(
+    [appointment_date] => 2026-04-08
+    [first_name] => klein
+    [last_name] => fernando
+    [customer_phone] => 0905987250
+    [customer_email] => kleinfernando57@gmail.com
+    [customer_address] => TAY AC, BANTAY, ILOCOS SUR
+    [employee_id] => 6
+    [service_id] => 2
+    [appointment_time] => 16:00
+    [purpose] => 
+)
+
+Parsed Data: first_name=klein, last_name=fernando, phone=0905987250, date=2026-04-08, time=16:00
+Existing customer found: ID 7
+Inserting appointment: INSERT INTO appointments (customer_id, employee_id, appointment_date, appointment_time, purpose, status, created_at) 
+                          VALUES ('7', '6', '2026-04-08', '16:00', '', 'pending', NOW())
+Appointment created: ID 16
+Inserting service: INSERT INTO customer_services (customer_id, service_id, appointment_id) 
+                          VALUES ('7', '2', '16')
+SUCCESS: Booking completed
