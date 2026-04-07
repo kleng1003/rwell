@@ -302,7 +302,7 @@ $archived_count = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) as tota
                     <div class="summary-card active-card">
                         <div class="summary-number"><?= $total_customers; ?></div>
                         <div class="summary-label">Active Customers</div>
-                        <a href="customers.php" class="btn btn-sm btn-success mt-2">View Active</a>
+                        <!-- <a href="customers.php" class="btn btn-sm btn-success mt-2">View Active</a> -->
                     </div>
                 </div>
                 <div class="col-md-6 col-sm-6">

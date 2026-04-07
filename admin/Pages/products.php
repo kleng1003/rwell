@@ -211,12 +211,12 @@ $categories = mysqli_query($con, "SELECT DISTINCT category FROM products WHERE c
                         <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#addProductModal" style="margin-left: 10px;">
                             <i class="fas fa-plus"></i> Add Product
                         </button>
-                        <a href="../reports/product-list.php" target="_blank" class="btn btn-primary btn-sm">
+                        <!-- <a href="../reports/product-list.php" target="_blank" class="btn btn-primary btn-sm">
                             <i class="fas fa-print"></i> Print
                         </a>
                         <a href="product-archive.php" class="btn btn-warning btn-sm">
                             <i class="fas fa-archive"></i> Archive
-                        </a>
+                        </a> -->
                     </div>
                 </div>
             </div>
@@ -292,13 +292,13 @@ $categories = mysqli_query($con, "SELECT DISTINCT category FROM products WHERE c
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         
-                                        <button class="btn btn-danger btn-sm action-btn archiveProductBtn" 
+                                        <!-- <button class="btn btn-danger btn-sm action-btn archiveProductBtn" 
                                                 data-id="<?= $row['product_id']; ?>"
                                                 data-name="<?= htmlspecialchars($row['product_name']); ?>"
                                                 data-toggle="tooltip" 
                                                 title="Archive Product">
                                             <i class="fas fa-archive"></i>
-                                        </button>
+                                        </button> -->
                                         
                                         <a href="product-view.php?id=<?= $row['product_id']; ?>" 
                                            class="btn btn-info btn-sm action-btn" 
