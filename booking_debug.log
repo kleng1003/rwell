@@ -1,0 +1,235 @@
+2026-03-23 15:59:37 - POST Data: Array
+(
+    [appointment_date] => 2026-03-24
+    [first_name] => lance
+    [last_name] => salgado
+    [customer_phone] => 09789456123
+    [customer_email] => email@email.com
+    [customer_address] => Cabugao, Ilocos Sur
+    [employee_id] => 6
+    [service_id] => 6
+    [appointment_time] => 09:00
+    [purpose] => 
+)
+
+2026-03-23 16:01:10 - POST Data: Array
+(
+    [appointment_date] => 2026-03-24
+    [first_name] => lance
+    [last_name] => salgado
+    [customer_phone] => 09789456123
+    [customer_email] => email@email.com
+    [customer_address] => Cabugao, Ilocos Sur
+    [employee_id] => 6
+    [service_id] => 6
+    [appointment_time] => 09:00
+    [purpose] => 
+)
+
+Parsed Data: first_name=lance, last_name=salgado, phone=09789456123, date=2026-03-24, time=09:00
+Existing customer found: ID 2
+Inserting appointment: INSERT INTO appointments (customer_id, employee_id, appointment_date, appointment_time, purpose, status, created_at) 
+                          VALUES ('2', '6', '2026-03-24', '09:00', '', 'pending', NOW())
+Appointment created: ID 5
+Inserting service: INSERT INTO customer_services (customer_id, service_id, appointment_id) 
+                          VALUES ('2', '6', '5')
+SUCCESS: Booking completed
+2026-03-31 12:11:34 - POST Data: Array
+(
+    [appointment_date] => 2026-03-31
+    [first_name] => trisha
+    [last_name] => pablico
+    [customer_phone] => 09535833073
+    [customer_email] => trisha31@gmail.com
+    [customer_address] => Sagpat, Bantay, Ilocos Sur
+    [employee_id] => 7
+    [service_id] => 2
+    [appointment_time] => 16:00
+    [purpose] => 
+)
+
+Parsed Data: first_name=trisha, last_name=pablico, phone=09535833073, date=2026-03-31, time=16:00
+Inserting new customer: INSERT INTO customers (first_name, last_name, phone, email, address, created_at) 
+                           VALUES ('trisha', 'pablico', '09535833073', 'trisha31@gmail.com', 'Sagpat, Bantay, Ilocos Sur', NOW())
+New customer created: ID 10
+Inserting appointment: INSERT INTO appointments (customer_id, employee_id, appointment_date, appointment_time, purpose, status, created_at) 
+                          VALUES ('10', '7', '2026-03-31', '16:00', '', 'pending', NOW())
+Appointment created: ID 8
+Inserting service: INSERT INTO customer_services (customer_id, service_id, appointment_id) 
+                          VALUES ('10', '2', '8')
+SUCCESS: Booking completed
+2026-04-07 05:40:54 - POST Data: Array
+(
+    [appointment_date] => 2026-04-07
+    [first_name] => klein
+    [last_name] => fernando
+    [customer_phone] => 09052597250
+    [customer_email] => fklein151@gmail.com
+    [customer_address] => BULAG WEST, BANTAY, ILOCOS SUR
+    [employee_id] => 7
+    [service_id] => 1
+    [appointment_time] => 09:30
+    [purpose] => 
+)
+
+Parsed Data: first_name=klein, last_name=fernando, phone=09052597250, date=2026-04-07, time=09:30
+Existing customer found: ID 9
+Inserting appointment: INSERT INTO appointments (customer_id, employee_id, appointment_date, appointment_time, purpose, status, created_at) 
+                          VALUES ('9', '7', '2026-04-07', '09:30', '', 'pending', NOW())
+Appointment created: ID 9
+Inserting service: INSERT INTO customer_services (customer_id, service_id, appointment_id) 
+                          VALUES ('9', '1', '9')
+SUCCESS: Booking completed
+2026-04-07 05:41:37 - POST Data: Array
+(
+    [appointment_date] => 2026-04-08
+    [first_name] => emiliana
+    [last_name] => Fernando
+    [customer_phone] => 09052597250
+    [customer_email] => fklein151@gmail.com
+    [customer_address] => San Juan, Ilocos, Sur
+    [employee_id] => 6
+    [service_id] => 7
+    [appointment_time] => 10:00
+    [purpose] => 
+)
+
+Parsed Data: first_name=emiliana, last_name=Fernando, phone=09052597250, date=2026-04-08, time=10:00
+Existing customer found: ID 9
+Inserting appointment: INSERT INTO appointments (customer_id, employee_id, appointment_date, appointment_time, purpose, status, created_at) 
+                          VALUES ('9', '6', '2026-04-08', '10:00', '', 'pending', NOW())
+Appointment created: ID 10
+Inserting service: INSERT INTO customer_services (customer_id, service_id, appointment_id) 
+                          VALUES ('9', '7', '10')
+SUCCESS: Booking completed
+2026-04-07 05:46:54 - POST Data: Array
+(
+    [appointment_date] => 2026-04-08
+    [first_name] => romark
+    [last_name] => pacpaco
+    [customer_phone] => 09052597250
+    [customer_email] => romark21@gmail.com
+    [customer_address] => sagpat, bantay, ilocos sur
+    [employee_id] => 7
+    [service_id] => 1
+    [appointment_time] => 16:30
+    [purpose] => 
+)
+
+Parsed Data: first_name=romark, last_name=pacpaco, phone=09052597250, date=2026-04-08, time=16:30
+Existing customer found: ID 9
+Inserting appointment: INSERT INTO appointments (customer_id, employee_id, appointment_date, appointment_time, purpose, status, created_at) 
+                          VALUES ('9', '7', '2026-04-08', '16:30', '', 'pending', NOW())
+Appointment created: ID 11
+Inserting service: INSERT INTO customer_services (customer_id, service_id, appointment_id) 
+                          VALUES ('9', '1', '11')
+SUCCESS: Booking completed
+2026-04-07 07:43:14 - POST Data: Array
+(
+    [appointment_date] => 2026-04-08
+    [first_name] => robert
+    [last_name] => pido
+    [customer_phone] => 09020225349
+    [customer_email] => pido1@gmail.com
+    [customer_address] => San Ildefonso, Ilocos Sur
+    [employee_id] => 7
+    [service_id] => 1
+    [appointment_time] => 12:30
+    [purpose] => 
+)
+
+Parsed Data: first_name=robert, last_name=pido, phone=09020225349, date=2026-04-08, time=12:30
+Inserting new customer: INSERT INTO customers (first_name, last_name, phone, email, address, created_at) 
+                           VALUES ('robert', 'pido', '09020225349', 'pido1@gmail.com', 'San Ildefonso, Ilocos Sur', NOW())
+New customer created: ID 11
+Inserting appointment: INSERT INTO appointments (customer_id, employee_id, appointment_date, appointment_time, purpose, status, created_at) 
+                          VALUES ('11', '7', '2026-04-08', '12:30', '', 'pending', NOW())
+Appointment created: ID 12
+Inserting service: INSERT INTO customer_services (customer_id, service_id, appointment_id) 
+                          VALUES ('11', '1', '12')
+SUCCESS: Booking completed
+2026-04-07 15:13:13 - POST Data: Array
+(
+    [appointment_date] => 2026-04-08
+    [first_name] => john
+    [last_name] => agliam
+    [customer_phone] => 0905987250
+    [customer_email] => agliam00@gmail.com
+    [customer_address] => sinait, ilocos sur
+    [employee_id] => 7
+    [service_id] => 2
+    [appointment_time] => 13:00
+    [purpose] => 
+)
+
+Parsed Data: first_name=john, last_name=agliam, phone=0905987250, date=2026-04-08, time=13:00
+Existing customer found: ID 7
+Inserting appointment: INSERT INTO appointments (customer_id, employee_id, appointment_date, appointment_time, purpose, status, created_at) 
+                          VALUES ('7', '7', '2026-04-08', '13:00', '', 'pending', NOW())
+Appointment created: ID 13
+Inserting service: INSERT INTO customer_services (customer_id, service_id, appointment_id) 
+                          VALUES ('7', '2', '13')
+SUCCESS: Booking completed
+2026-04-07 15:16:28 - POST Data: Array
+(
+    [appointment_date] => 2026-04-10
+    [first_name] => mark
+    [last_name] => piga
+    [customer_phone] => 0905987250
+    [customer_email] => mark10@gmail.com
+    [customer_address] => TAY AC, BANTAY, ILOCOS SUR
+    [employee_id] => 6
+    [service_id] => 3
+    [appointment_time] => 17:30
+    [purpose] => 
+)
+
+Parsed Data: first_name=mark, last_name=piga, phone=0905987250, date=2026-04-10, time=17:30
+Existing customer found: ID 7
+Inserting appointment: INSERT INTO appointments (customer_id, employee_id, appointment_date, appointment_time, purpose, status, created_at) 
+                          VALUES ('7', '6', '2026-04-10', '17:30', '', 'pending', NOW())
+Appointment created: ID 14
+Inserting service: INSERT INTO customer_services (customer_id, service_id, appointment_id) 
+                          VALUES ('7', '3', '14')
+SUCCESS: Booking completed
+2026-04-07 15:18:33 - POST Data: Array
+(
+    [appointment_date] => 2026-04-23
+    [first_name] => JOHNDEE
+    [last_name] => PIDO
+    [customer_phone] => 0905987250
+    [customer_email] => PIDO@GMAIL.COM
+    [customer_address] => TAY AC, BANTAY, ILOCOS SUR
+    [employee_id] => 
+    [service_id] => 7
+    [appointment_time] => 16:30
+    [purpose] => 
+)
+
+Parsed Data: first_name=JOHNDEE, last_name=PIDO, phone=0905987250, date=2026-04-23, time=16:30
+Existing customer found: ID 7
+Inserting appointment: INSERT INTO appointments (customer_id, employee_id, appointment_date, appointment_time, purpose, status, created_at) 
+                          VALUES ('7', NULL, '2026-04-23', '16:30', '', 'pending', NOW())
+ERROR: Column 'employee_id' cannot be null
+2026-04-07 15:18:45 - POST Data: Array
+(
+    [appointment_date] => 2026-04-23
+    [first_name] => JOHNDEE
+    [last_name] => PIDO
+    [customer_phone] => 0905987250
+    [customer_email] => PIDO@GMAIL.COM
+    [customer_address] => TAY AC, BANTAY, ILOCOS SUR
+    [employee_id] => 6
+    [service_id] => 7
+    [appointment_time] => 16:30
+    [purpose] => 
+)
+
+Parsed Data: first_name=JOHNDEE, last_name=PIDO, phone=0905987250, date=2026-04-23, time=16:30
+Existing customer found: ID 7
+Inserting appointment: INSERT INTO appointments (customer_id, employee_id, appointment_date, appointment_time, purpose, status, created_at) 
+                          VALUES ('7', '6', '2026-04-23', '16:30', '', 'pending', NOW())
+Appointment created: ID 15
+Inserting service: INSERT INTO customer_services (customer_id, service_id, appointment_id) 
+                          VALUES ('7', '7', '15')
+SUCCESS: Booking completed

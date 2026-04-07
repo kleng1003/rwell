@@ -1,0 +1,8 @@
+# .htaccess
+AddType application/x-httpd-php .php
+AddHandler application/x-httpd-php .php
+
+# Make sure PHP files are processed
+<FilesMatch "\.php$">
+    SetHandler application/x-httpd-php
+</FilesMatch>

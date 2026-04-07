@@ -1,0 +1,20 @@
+1;Austria;Vienna;83859;8075
+2;Belgium;Brussels;30518;10192
+3;Denmark;Copenhagen;43094;5295
+4;Finland;Helsinki;304529;5147
+5;France;Paris;543965;58728
+6;Germany;Berlin;357022;82057
+7;Greece;Athens;131625;10511
+8;Ireland;Dublin;70723;3694
+9;Italy;Roma;301316;57563
+10;Luxembourg;Luxembourg;2586;424
+11;Netherlands;Amsterdam;41526;15654
+12;Portugal;Lisbon;91906;9957
+13;Spain;Madrid;504790;39348
+14;Sweden;Stockholm;410934;8839
+15;United Kingdom;London;243820;58862
+16;Austria;Vienna;83859;8075
+17;Belgium;Brussels;30518;10192
+18;Denmark;Copenhagen;43094;5295
+19;Finland;Helsinki;304529;5147
+20;France;Paris;543965;58728
