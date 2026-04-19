@@ -196,7 +196,7 @@ while ($row = mysqli_fetch_assoc($products_query)) {
                         <!-- <a href="../reports/supplier-list.php" target="_blank" class="btn btn-primary btn-sm">
                             <i class="fas fa-print"></i> Print
                         </a> -->
-                        <a href="supplier-archive.php" class="btn btn-warning btn-sm">
+                        <a href="supplier-archive.php" class="btn btn-danger btn-sm">
                             <i class="fas fa-archive"></i> Archive 
                             <?php if ($archived_count > 0): ?>
                                 <span class="badge" style="background: white; color: #856404;"><?= $archived_count; ?></span>

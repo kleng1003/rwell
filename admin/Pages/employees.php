@@ -91,7 +91,7 @@ $archived_count = mysqli_fetch_assoc($archived_count_query)['total'];
                         <!-- <a href="../reports/employee-list.php" target="_blank" class="btn btn-primary btn-sm" id="printTable">
                             <i class="fas fa-print"></i> Print Table
                         </a> -->
-                        <a href="employee-archive.php" class="btn btn-warning btn-sm">
+                        <a href="employee-archive.php" class="btn btn-danger btn-sm">
                             <i class="fas fa-archive"></i> Archive 
                             <?php if ($archived_count > 0): ?>
                                 <span class="badge"><?php echo $archived_count; ?></span>
@@ -134,7 +134,7 @@ $archived_count = mysqli_fetch_assoc($archived_count_query)['total'];
                                 <td><?= $statusBadge; ?></td>
                                 <td>
                                     <a href="../Functions/employee_update.php?id=<?= $row['employee_id']; ?>"
-                                       class="btn btn-success btn-sm"
+                                       class="btn btn-warning btn-sm"
                                        data-toggle="tooltip"
                                        title="Update">
                                         <i class="fas fa-edit"></i>
@@ -148,7 +148,7 @@ $archived_count = mysqli_fetch_assoc($archived_count_query)['total'];
                                         <i class="fas fa-archive"></i>
                                     </a>
 
-                                    <button class="btn btn-warning btn-sm viewBtn"
+                                    <button class="btn btn-info btn-sm viewBtn"
                                             data-id="<?= $row['employee_id']; ?>"
                                             data-toggle="tooltip"
                                             title="View">

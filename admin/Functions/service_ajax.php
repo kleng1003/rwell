@@ -14,14 +14,15 @@ $action = $_POST['action'] ?? '';
 /* ================= ADD ================= */
 if ($action == 'add') {
 
-    $name = $_POST['service_name'];
+   $name = $_POST['service_name'];
+    $category = $_POST['category'];
     $desc = $_POST['description'];
     $price = floatval($_POST['price']);
     $duration = intval($_POST['duration']);
     $status = $_POST['status'];
 
-    $stmt = $con->prepare("INSERT INTO services (service_name, description, price, duration, status) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssdis", $name, $desc, $price, $duration, $status);
+    $stmt = $con->prepare("INSERT INTO services (service_name, category, description, price, duration, status) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssdis", $name, $category, $desc, $price, $duration, $status);
 
     if ($stmt->execute()) {
         echo json_encode(['status'=>'success','message'=>'Service added']);
@@ -35,13 +36,14 @@ if ($action == 'update') {
 
     $id = $_POST['service_id'];
     $name = $_POST['service_name'];
+    $category = $_POST['category'];
     $desc = $_POST['description'];
     $price = floatval($_POST['price']);
     $duration = intval($_POST['duration']);
     $status = $_POST['status'];
 
-    $stmt = $con->prepare("UPDATE services SET service_name=?, description=?, price=?, duration=?, status=? WHERE service_id=?");
-    $stmt->bind_param("ssdisi", $name, $desc, $price, $duration, $status, $id);
+    $stmt = $con->prepare("UPDATE services SET service_name=?, category=?, description=?, price=?, duration=?, status=? WHERE service_id=?");
+    $stmt->bind_param("sssdisi", $name, $category, $desc, $price, $duration, $status, $id);
 
     if ($stmt->execute()) {
         echo json_encode(['status'=>'success','message'=>'Service updated']);

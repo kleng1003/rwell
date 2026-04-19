@@ -150,7 +150,7 @@ $result = $con->query($sql);
                             <option value="week">This Week</option>
                         </select>
                         
-                        <a href="appointment_add.php" class="btn btn-info btn-sm">
+                        <a href="appointment_add.php" class="btn btn-success btn-sm">
                             <i class="fas fa-plus"></i> New Appointment
                         </a>
                     </div>

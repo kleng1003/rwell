@@ -208,7 +208,7 @@ $categories = mysqli_query($con, "SELECT DISTINCT category FROM products WHERE c
                         <button class="filter-btn" data-filter="low">Low Stock</button>
                         <button class="filter-btn" data-filter="normal">Normal</button>
                         
-                        <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#addProductModal" style="margin-left: 10px;">
+                        <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#addProductModal" style="margin-left: 10px;">
                             <i class="fas fa-plus"></i> Add Product
                         </button>
                         <!-- <a href="../reports/product-list.php" target="_blank" class="btn btn-primary btn-sm">

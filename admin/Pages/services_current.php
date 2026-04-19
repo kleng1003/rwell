@@ -34,8 +34,9 @@ if (isset($_POST['add_service'])) {
     } elseif ($duration <= 0) {
         $error = "Duration must be greater than 0!";
     } else {
-        $stmt = $con->prepare("INSERT INTO services (service_name, description, price, duration, status) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssdis", $service_name, $description, $price, $duration, $status);
+        $category = trim($_POST['category']);
+        $stmt = $con->prepare("INSERT INTO services (service_name, category, description, price, duration, status) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssdis", $service_name, $category, $description, $price, $duration, $status);
 
         if ($stmt->execute()) {
             $message = "Service added successfully!";
@@ -56,8 +57,9 @@ if (isset($_POST['edit_service'])) {
     $duration = intval($_POST['duration']);
     $status = $_POST['status'];
 
-    $stmt = $con->prepare("UPDATE services SET service_name=?, description=?, price=?, duration=?, status=? WHERE service_id=?");
-    $stmt->bind_param("ssdisi", $service_name, $description, $price, $duration, $status, $service_id);
+    $category = trim($_POST['category']);
+    $stmt = $con->prepare("UPDATE services SET service_name=?, category=?, description=?, price=?, duration=?, status=? WHERE service_id=?");
+    $stmt->bind_param("sssdisi", $service_name, $category, $description, $price, $duration, $status, $service_id);
 
     if ($stmt->execute()) {
         $message = "Service updated successfully!";
@@ -367,6 +369,7 @@ $stats = $con->query("
                         <thead>
                             <tr>
                                 <th>Service</th>
+                                <th>Category</th>
                                 <th>Description</th>
                                 <th>Duration</th>
                                 <th>Price</th>
@@ -381,6 +384,10 @@ $stats = $con->query("
                                     <td>
                                         <i class="fas fa-spa"></i>
                                         <strong><?= htmlspecialchars($service['service_name']); ?></strong>
+                                    </td>
+                                    
+                                    <td>
+                                        <?php echo htmlspecialchars($service['category']); ?>
                                     </td>
 
                                     <td>

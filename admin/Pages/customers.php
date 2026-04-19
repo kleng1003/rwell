@@ -142,7 +142,7 @@ $archived_count = mysqli_fetch_assoc($archived_count)['total'] ?? 0;
                             <i class="fas fa-print"></i> Print List
                         </a> -->
                         <?php if ($has_status && $archived_count > 0): ?>
-                            <a href="customer-archive.php" class="btn btn-warning btn-sm">
+                            <a href="customer-archive.php" class="btn btn-danger btn-sm">
                                 <i class="fas fa-archive"></i> Archive 
                                 <span class="badge" style="background: white; color: #856404;"><?= $archived_count; ?></span>
                             </a>
@@ -180,7 +180,7 @@ $archived_count = mysqli_fetch_assoc($archived_count)['total'] ?? 0;
                                         <td><?= htmlspecialchars(substr($row["address"] ?: 'N/A', 0, 30)); ?>
                                         <td><?= htmlspecialchars($row["services"] ?: 'No services'); ?>
                                         <td>
-                                            <button class="btn btn-success btn-sm editCustomerBtn" 
+                                            <button class="btn btn-warning btn-sm editCustomerBtn" 
                                                     data-id="<?= $row['customer_id']; ?>" 
                                                     data-toggle="tooltip" 
                                                     title="Edit Customer">

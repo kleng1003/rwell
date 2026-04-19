@@ -1,0 +1,120 @@
+:root {
+    /* Color Palette - Rwell Brand */
+    --primary: #2D6A4F;         /* Deep Forest Green */
+    --primary-light: #52B788;   /* Sea Green */
+    --secondary: #D8F3DC;       /* Mint Tint */
+    --accent: #FF8C42;          /* Soft Orange for CTAs */
+    --bg-main: #F8F9FA;
+    --bg-sidebar: #1B4332;
+    --text-main: #2D3436;
+    --text-muted: #636E72;
+    --white: #FFFFFF;
+    --error: #D63031;
+    --success: #00B894;
+
+    /* Spacing & Layout */
+    --sidebar-width: 260px;
+    --header-height: 70px;
+    --radius: 8px;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    margin: 0;
+    display: flex;
+}
+
+/* Layout Structure */
+.admin-wrapper {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--bg-sidebar);
+    color: var(--white);
+    padding: 1.5rem;
+    position: fixed;
+    height: 100vh;
+    transition: all 0.3s ease;
+}
+
+.sidebar .brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--primary-light);
+    text-align: center;
+}
+
+.nav-link {
+    display: block;
+    padding: 0.8rem 1rem;
+    color: var(--secondary);
+    text-decoration: none;
+    border-radius: var(--radius);
+    margin-bottom: 0.5rem;
+    transition: background 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+    background-color: var(--primary);
+    color: var(--white);
+}
+
+/* Main Content Area */
+.main-content {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    padding: 2rem;
+}
+
+.top-bar {
+    height: var(--header-height);
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+    border-radius: var(--radius);
+}
+
+/* Component Consistency */
+.card {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+button {
+    background-color: var(--primary);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.1s;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #DFE6E9;
+    border-radius: var(--radius);
+    margin-top: 0.5rem;
+    box-sizing: border-box;
+}

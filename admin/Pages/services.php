@@ -19,23 +19,59 @@ $message = '';
 $error = '';
 $message_type = '';
 
-// Handle Add Service
+/*
+|--------------------------------------------------------------------------
+| Fixed category choices
+|--------------------------------------------------------------------------
+*/
+/*
+|--------------------------------------------------------------------------
+| Load dynamic category options from services table
+|--------------------------------------------------------------------------
+*/
+$category_options = [];
+$category_query = $con->query("
+    SELECT DISTINCT category 
+    FROM services 
+    WHERE category IS NOT NULL 
+      AND category != '' 
+    ORDER BY category ASC
+");
+
+if ($category_query) {
+    while ($row = $category_query->fetch_assoc()) {
+        $category_options[] = $row['category'];
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| Handle Add Service
+|--------------------------------------------------------------------------
+*/
 if (isset($_POST['add_service'])) {
     $service_name = trim($_POST['service_name']);
+    $category = trim($_POST['category']);
     $description = trim($_POST['description']);
     $price = floatval($_POST['price']);
     $duration = intval($_POST['duration']);
-    $status = $_POST['status'];
+    $status = trim($_POST['status']);
 
     if (empty($service_name)) {
         $error = "Service name is required!";
+        $message_type = "danger";
+    } elseif (empty($category)) {
+        $error = "Category is required!";
+        $message_type = "danger";
     } elseif ($price <= 0) {
         $error = "Price must be greater than 0!";
+        $message_type = "danger";
     } elseif ($duration <= 0) {
         $error = "Duration must be greater than 0!";
+        $message_type = "danger";
     } else {
-        $stmt = $con->prepare("INSERT INTO services (service_name, description, price, duration, status) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssdis", $service_name, $description, $price, $duration, $status);
+        $stmt = $con->prepare("INSERT INTO services (service_name, category, description, price, duration, status) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssdis", $service_name, $category, $description, $price, $duration, $status);
 
         if ($stmt->execute()) {
             $message = "Service added successfully!";
@@ -44,86 +80,169 @@ if (isset($_POST['add_service'])) {
             $error = "Database error: " . $stmt->error;
             $message_type = "danger";
         }
+        $stmt->close();
     }
 }
 
-// Handle Edit Service
+/*
+|--------------------------------------------------------------------------
+| Handle Edit Service
+|--------------------------------------------------------------------------
+*/
 if (isset($_POST['edit_service'])) {
     $service_id = intval($_POST['service_id']);
     $service_name = trim($_POST['service_name']);
+    $category = trim($_POST['category']);
     $description = trim($_POST['description']);
     $price = floatval($_POST['price']);
     $duration = intval($_POST['duration']);
-    $status = $_POST['status'];
+    $status = trim($_POST['status']);
 
-    $stmt = $con->prepare("UPDATE services SET service_name=?, description=?, price=?, duration=?, status=? WHERE service_id=?");
-    $stmt->bind_param("ssdisi", $service_name, $description, $price, $duration, $status, $service_id);
-
-    if ($stmt->execute()) {
-        $message = "Service updated successfully!";
-        $message_type = "success";
-    } else {
-        $error = "Error updating service: " . $stmt->error;
+    if (empty($service_name)) {
+        $error = "Service name is required!";
         $message_type = "danger";
-    }
-}
-
-// Handle Delete Service
-if (isset($_GET['delete'])) {
-    $service_id = intval($_GET['delete']);
-
-    // Check appointments
-    $check = $con->prepare("SELECT COUNT(*) FROM appointments WHERE service_id=?");
-    $check->bind_param("i", $service_id);
-    $check->execute();
-    $check->bind_result($appointment_count);
-    $check->fetch();
-    $check->close();
-
-    if ($appointment_count > 0) {
-        $error = "Cannot delete this service because it has $appointment_count existing appointment(s)!";
-        $message_type = "warning";
+    } elseif (empty($category)) {
+        $error = "Category is required!";
+        $message_type = "danger";
+    } elseif ($price <= 0) {
+        $error = "Price must be greater than 0!";
+        $message_type = "danger";
+    } elseif ($duration <= 0) {
+        $error = "Duration must be greater than 0!";
+        $message_type = "danger";
     } else {
-        $stmt = $con->prepare("DELETE FROM services WHERE service_id=?");
-        $stmt->bind_param("i", $service_id);
+        $stmt = $con->prepare("UPDATE services SET service_name=?, category=?, description=?, price=?, duration=?, status=? WHERE service_id=?");
+        $stmt->bind_param("sssdisi", $service_name, $category, $description, $price, $duration, $status, $service_id);
 
         if ($stmt->execute()) {
-            $message = "Service deleted successfully!";
+            $message = "Service updated successfully!";
             $message_type = "success";
         } else {
-            $error = "Error deleting service: " . $stmt->error;
+            $error = "Error updating service: " . $stmt->error;
             $message_type = "danger";
         }
+        $stmt->close();
     }
 }
 
-// Handle Toggle Status
-if (isset($_GET['toggle_status'])) {
-    $service_id = intval($_GET['toggle_status']);
-    $con->query("UPDATE services SET status = IF(status = 'active', 'inactive', 'active') WHERE service_id = $service_id");
-    $message = "Service status toggled successfully!";
-    $message_type = "success";
+/*
+|--------------------------------------------------------------------------
+| Handle Archive Service
+|--------------------------------------------------------------------------
+*/
+if (isset($_GET['archive'])) {
+    $service_id = intval($_GET['archive']);
+
+    $stmt = $con->prepare("UPDATE services SET status='inactive' WHERE service_id=?");
+    $stmt->bind_param("i", $service_id);
+
+    if ($stmt->execute()) {
+        $message = "Service archived successfully!";
+        $message_type = "success";
+    } else {
+        $error = "Error archiving service: " . $stmt->error;
+        $message_type = "danger";
+    }
+    $stmt->close();
 }
 
-// Fetch all services for DataTables
-$result = $con->query("SELECT * FROM services ORDER BY created_at DESC");
-$services = $result->fetch_all(MYSQLI_ASSOC);
+/*
+|--------------------------------------------------------------------------
+| Handle Toggle Status
+|--------------------------------------------------------------------------
+*/
+if (isset($_GET['toggle_status'])) {
+    $service_id = intval($_GET['toggle_status']);
+    $toggle_stmt = $con->prepare("UPDATE services SET status = IF(status = 'active', 'inactive', 'active') WHERE service_id = ?");
+    $toggle_stmt->bind_param("i", $service_id);
 
-// Stats
+    if ($toggle_stmt->execute()) {
+        $message = "Service status toggled successfully!";
+        $message_type = "success";
+    } else {
+        $error = "Error toggling status: " . $toggle_stmt->error;
+        $message_type = "danger";
+    }
+    $toggle_stmt->close();
+}
+
+/*
+|--------------------------------------------------------------------------
+| Filters
+|--------------------------------------------------------------------------
+*/
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$status_filter = isset($_GET['status_filter']) ? trim($_GET['status_filter']) : 'all';
+$category_filter = isset($_GET['category_filter']) ? trim($_GET['category_filter']) : 'all';
+
+$where = "WHERE status != 'inactive'";
+$params = [];
+$types = "";
+
+if (!empty($search)) {
+    $where .= " AND (service_name LIKE ? OR description LIKE ? OR category LIKE ?)";
+    $searchTerm = "%{$search}%";
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+    $types .= "sss";
+}
+
+if (!empty($status_filter) && $status_filter !== 'all') {
+    $where .= " AND status = ?";
+    $params[] = $status_filter;
+    $types .= "s";
+}
+
+if (!empty($category_filter) && $category_filter !== 'all') {
+    $where .= " AND category = ?";
+    $params[] = $category_filter;
+    $types .= "s";
+}
+
+/*
+|--------------------------------------------------------------------------
+| Fetch services
+|--------------------------------------------------------------------------
+*/
+$query = "SELECT * FROM services {$where} ORDER BY created_at DESC";
+$stmt = $con->prepare($query);
+
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
+$services = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+/*
+|--------------------------------------------------------------------------
+| Stats
+|--------------------------------------------------------------------------
+*/
 $stats = $con->query("
     SELECT 
-    COUNT(*) as total,
-    SUM(status='active') as active,
-    SUM(status='inactive') as inactive,
-    AVG(price) as avg_price,
-    MIN(price) as min_price,
-    MAX(price) as max_price
+        COUNT(*) as total,
+        SUM(status='active') as active,
+        SUM(status='inactive') as inactive,
+        AVG(price) as avg_price,
+        MIN(price) as min_price,
+        MAX(price) as max_price
     FROM services
 ")->fetch_assoc();
+
+/*
+|--------------------------------------------------------------------------
+| Archived count
+|--------------------------------------------------------------------------
+*/
+$archived_count_query = mysqli_query($con, "SELECT COUNT(*) as total FROM services WHERE status = 'inactive'");
+$archived_count = mysqli_fetch_assoc($archived_count_query)['total'];
 ?>
 
 <style>
-    /* DataTables Custom Styling */
     .dataTables_wrapper .dataTables_paginate .paginate_button {
         padding: 5px 12px;
         margin: 0 2px;
@@ -196,6 +315,16 @@ $stats = $con->query("
         color: #2c3e50;
         font-size: 16px;
     }
+    .category-badge {
+        background: #f1f3f5;
+        color: #333;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+        white-space: nowrap;
+    }
     .stat-card {
         background: white;
         border-radius: 10px;
@@ -250,21 +379,25 @@ $stats = $con->query("
         padding: 4px 8px;
         font-size: 12px;
     }
+    .filter-row .form-control {
+        margin-bottom: 10px;
+    }
 </style>
 
-<!-- Page Header -->
 <div class="row">
     <div class="col-lg-12">
         <h1 class="page-header">
             <i class="fas fa-spa"></i> Services Management
-            <button class="btn btn-primary pull-right" data-toggle="modal" data-target="#addServiceModal">
+            <button class="btn btn-success pull-right" data-toggle="modal" data-target="#addServiceModal">
                 <i class="fas fa-plus"></i> Add New Service
             </button>
+            <a href="service-archive.php" class="btn btn-danger pull-right" style="margin-right: 10px;">
+                <i class="fas fa-archive"></i> Archive <span class="badge"><?php echo $archived_count; ?></span>
+            </a>
         </h1>
     </div>
 </div>
 
-<!-- Alert Messages -->
 <?php if ($message): ?>
     <div class="alert alert-<?php echo $message_type; ?> alert-dismissible fade in">
         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
@@ -274,14 +407,93 @@ $stats = $con->query("
 <?php endif; ?>
 
 <?php if ($error): ?>
-    <div class="alert alert-<?php echo $message_type; ?> alert-dismissible fade in">
+    <div class="alert alert-<?php echo $message_type ?: 'danger'; ?> alert-dismissible fade in">
         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
         <i class="fas fa-exclamation-triangle"></i>
         <?php echo $error; ?>
     </div>
 <?php endif; ?>
 
-<!-- Services DataTable -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon"><i class="fas fa-spa"></i></div>
+            <div class="stat-number"><?php echo $stats['total'] ?: 0; ?></div>
+            <div>Total Services</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-number"><?php echo $stats['active'] ?: 0; ?></div>
+            <div>Active Services</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon"><i class="fas fa-tags"></i></div>
+            <div class="stat-number">₱<?php echo number_format($stats['avg_price'] ?: 0, 2); ?></div>
+            <div>Average Price</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-number">₱<?php echo number_format($stats['max_price'] ?: 0, 2); ?></div>
+            <div>Highest Price</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3 filter-row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <form method="GET" action="">
+                    <div class="row">
+                        <!-- <div class="col-md-3">
+                            <input type="text" name="search" class="form-control" placeholder="Search by service, description, or category..." value="<?php echo htmlspecialchars($search); ?>">
+                        </div> -->
+
+                        <div class="col-md-3">
+                            <select name="category_filter" class="form-control">
+                                <option value="all" <?php echo ($category_filter === 'all' || $category_filter === '') ? 'selected' : ''; ?>>
+                                    All Categories
+                                </option>
+                                <?php foreach ($category_options as $cat): ?>
+                                    <option value="<?php echo htmlspecialchars($cat); ?>" <?php echo $category_filter === $cat ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($cat); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <select name="status_filter" class="form-control">
+                                <option value="all" <?php echo $status_filter === 'all' ? 'selected' : ''; ?>>All Status</option>
+                                <option value="active" <?php echo $status_filter === 'active' ? 'selected' : ''; ?>>Active</option>
+                                <option value="inactive" <?php echo $status_filter === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-filter"></i> Apply Filter
+                            </button>
+                        </div>
+
+                        <div class="col-md-2">
+                            <a href="services.php" class="btn btn-default btn-block">
+                                <i class="fas fa-sync-alt"></i> Reset
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-md-12">
         <div class="panel panel-default">
@@ -300,12 +512,12 @@ $stats = $con->query("
                             <tr>
                                 <th width="5%">ID</th>
                                 <th width="15%">Service Name</th>
-                                <th width="30%">Description</th>
+                                <th width="14%">Category</th>
+                                <th width="25%">Description</th>
                                 <th width="8%">Duration</th>
                                 <th width="8%">Price</th>
                                 <th width="8%">Status</th>
-                                <!-- <th width="10%">Created Date</th> -->
-                                <th width="15%">Actions</th>
+                                <th width="17%">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -313,11 +525,16 @@ $stats = $con->query("
                             <tr>
                                 <td><?php echo $service['service_id']; ?></td>
                                 <td>
-                                    <i class="fas fa-spa text-primary"></i> 
+                                    <i class="fas fa-spa text-primary"></i>
                                     <strong><?php echo htmlspecialchars($service['service_name']); ?></strong>
                                 </td>
+                                <td>
+                                    <span class="category-badge">
+                                        <?php echo htmlspecialchars($service['category']); ?>
+                                    </span>
+                                </td>
                                 <td class="service-description" title="<?php echo htmlspecialchars($service['description']); ?>">
-                                    <?php 
+                                    <?php
                                     $desc = htmlspecialchars($service['description']);
                                     echo !empty($desc) ? (strlen($desc) > 100 ? substr($desc, 0, 100) . '...' : $desc) : '<em class="text-muted">No description</em>';
                                     ?>
@@ -337,10 +554,6 @@ $stats = $con->query("
                                         <?php echo ucfirst($service['status']); ?>
                                     </span>
                                 </td>
-                                <!-- <td>
-                                    <i class="far fa-calendar-alt"></i> 
-                                    <?php echo date('M d, Y', strtotime($service['created_at'])); ?>
-                                </td> -->
                                 <td class="action-buttons">
                                     <a href="javascript:void(0);" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editServiceModal<?php echo $service['service_id']; ?>">
                                         <i class="fas fa-edit"></i> Edit
@@ -348,13 +561,12 @@ $stats = $con->query("
                                     <a href="?toggle_status=<?php echo $service['service_id']; ?>" class="btn btn-info btn-sm" onclick="return confirm('Toggle service status?')">
                                         <i class="fas fa-power-off"></i>
                                     </a>
-                                    <a href="?delete=<?php echo $service['service_id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Delete this service? This action cannot be undone!')">
-                                        <i class="fas fa-trash"></i>
+                                    <a href="?archive=<?php echo $service['service_id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Archive this service?')">
+                                        <i class="fas fa-archive"></i>
                                     </a>
                                 </td>
                             </tr>
-                            
-                            <!-- Edit Modal for each service -->
+
                             <div class="modal fade" id="editServiceModal<?php echo $service['service_id']; ?>" tabindex="-1" role="dialog">
                                 <div class="modal-dialog" role="document">
                                     <div class="modal-content">
@@ -369,17 +581,22 @@ $stats = $con->query("
                                         <form method="POST">
                                             <div class="modal-body">
                                                 <input type="hidden" name="service_id" value="<?php echo $service['service_id']; ?>">
-                                                
+
                                                 <div class="form-group">
                                                     <label>Service Name *</label>
                                                     <input type="text" name="service_name" class="form-control" value="<?php echo htmlspecialchars($service['service_name']); ?>" required>
                                                 </div>
-                                                
+
+                                                <div class="form-group">
+                                                    <label>Category *</label>
+                                                    <input type="text" name="category" class="form-control" list="categoryList" value="<?php echo htmlspecialchars($service['category']); ?>" required>
+                                                </div>
+
                                                 <div class="form-group">
                                                     <label>Description</label>
                                                     <textarea name="description" class="form-control" rows="4"><?php echo htmlspecialchars($service['description']); ?></textarea>
                                                 </div>
-                                                
+
                                                 <div class="row">
                                                     <div class="col-md-6">
                                                         <div class="form-group">
@@ -394,7 +611,7 @@ $stats = $con->query("
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div class="form-group">
                                                     <label>Status</label>
                                                     <select name="status" class="form-control">
@@ -414,13 +631,18 @@ $stats = $con->query("
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+
+                    <?php if (empty($services)): ?>
+                        <div class="alert alert-info" style="margin-top: 15px;">
+                            <i class="fas fa-info-circle"></i> No services found for the selected filter.
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Add Service Modal -->
 <div class="modal fade" id="addServiceModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -439,13 +661,24 @@ $stats = $con->query("
                         <input type="text" name="service_name" class="form-control" placeholder="e.g., Haircut & Style" required>
                         <small class="text-muted">Enter the name of the service offered</small>
                     </div>
-                    
+
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <input type="text" name="category" class="form-control" list="categoryList" placeholder="Enter or choose category" required>
+                        <datalist id="categoryList">
+                            <?php foreach ($category_options as $cat): ?>
+                                <option value="<?php echo htmlspecialchars($cat); ?>">
+                            <?php endforeach; ?>
+                        </datalist>
+                        <small class="text-muted">Choose an existing category or type a new one</small>
+                    </div>
+
                     <div class="form-group">
                         <label>Description</label>
                         <textarea name="description" class="form-control" rows="4" placeholder="Describe the service, what's included, benefits, etc."></textarea>
                         <small class="text-muted">Detailed description helps customers understand the service</small>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
@@ -462,7 +695,7 @@ $stats = $con->query("
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Status</label>
                         <select name="status" class="form-control">
@@ -470,9 +703,9 @@ $stats = $con->query("
                             <option value="inactive">Inactive - Temporarily unavailable</option>
                         </select>
                     </div>
-                    
+
                     <div class="alert alert-info" style="margin-top: 15px;">
-                        <i class="fas fa-info-circle"></i> 
+                        <i class="fas fa-info-circle"></i>
                         <strong>Note:</strong> Active services will be visible to customers when booking appointments.
                     </div>
                 </div>
@@ -485,7 +718,6 @@ $stats = $con->query("
     </div>
 </div>
 
-<!-- JavaScript -->
 <script src="../js/jquery.min.js"></script>
 <script src="../js/bootstrap.min.js"></script>
 <script src="../js/metisMenu.min.js"></script>
@@ -494,11 +726,10 @@ $stats = $con->query("
 
 <script>
 $(document).ready(function() {
-    // Initialize DataTable
     $('#servicesTable').DataTable({
         "pageLength": 10,
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-        "order": [[0, "desc"]], // Sort by ID descending
+        "order": [[0, "desc"]],
         "language": {
             "search": "<i class='fas fa-search'></i> Search:",
             "lengthMenu": "Show _MENU_ entries",
@@ -513,37 +744,39 @@ $(document).ready(function() {
             }
         },
         "columnDefs": [
-            { "orderable": true, "targets": [0, 1, 3, 4, 5, 6] },
-            { "orderable": false, "targets": [2, 7] }, // Description and Actions not orderable
-            { "searchable": true, "targets": [0, 1, 2] }, // ID, Name, Description searchable
-            { "searchable": false, "targets": [3, 4, 5, 6, 7] } // Others not searchable by default
+            { "orderable": true, "targets": [0, 1, 2, 4, 5, 6] },
+            { "orderable": false, "targets": [3, 7] }
         ]
     });
-    
-    // Auto-hide alerts after 5 seconds
+
     setTimeout(function() {
         $(".alert").fadeOut("slow");
     }, 5000);
-    
-    // Form validation before submit
+
     $("form").on("submit", function(e) {
         var price = $(this).find("input[name='price']").val();
         var duration = $(this).find("input[name='duration']").val();
-        
+        var category = $(this).find("select[name='category']").val();
+
+        if (category !== undefined && category === '') {
+            alert("Please select a category!");
+            e.preventDefault();
+            return false;
+        }
+
         if (price && parseFloat(price) <= 0) {
             alert("Price must be greater than 0!");
             e.preventDefault();
             return false;
         }
-        
+
         if (duration && parseInt(duration) <= 0) {
             alert("Duration must be greater than 0 minutes!");
             e.preventDefault();
             return false;
         }
     });
-    
-    // Add tooltip to description cells
+
     $('.service-description').each(function() {
         var title = $(this).attr('title');
         if (title && title !== '') {

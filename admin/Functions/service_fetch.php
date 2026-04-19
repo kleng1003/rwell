@@ -7,6 +7,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 ?>
 <tr>
     <td><strong><?= $row['service_name']; ?></strong></td>
+    <td><?= htmlspecialchars($row['category']); ?></td>
     <td><?= $row['description'] ?: '—'; ?></td>
     <td><?= $row['duration']; ?> mins</td>
     <td>₱<?= number_format($row['price'], 2); ?></td>
