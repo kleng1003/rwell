@@ -5,6 +5,55 @@ session_start();
 // Include database connection
 require_once 'admin/include/connection.php';
 
+// Check if user is already logged in as client
+if (isset($_SESSION['client_id'])) {
+    // Redirect to client dashboard if already logged in
+    header('Location: client/dashboard.php');
+    exit();
+}
+
+// Process login form submission
+$login_error = '';
+$login_success = '';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login_action'])) {
+    $username = trim($_POST['username']);
+    $password = $_POST['password'];
+    
+    // Check if customers table has username and password columns
+    // If not, you need to add them first (run the SQL from previous response)
+    $sql = "SELECT customer_id, first_name, last_name, username, password, client_status, email, phone 
+            FROM customers 
+            WHERE username = ? AND client_status = 'active'";
+    $stmt = $con->prepare($sql);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows == 1) {
+        $user = $result->fetch_assoc();
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['client_id'] = $user['customer_id'];
+            $_SESSION['client_name'] = $user['first_name'] . ' ' . $user['last_name'];
+            $_SESSION['client_username'] = $user['username'];
+            
+            // Update last login
+            $updateSql = "UPDATE customers SET last_login = NOW(), last_ip = ? WHERE customer_id = ?";
+            $updateStmt = $con->prepare($updateSql);
+            $updateStmt->bind_param("si", $_SERVER['REMOTE_ADDR'], $user['customer_id']);
+            $updateStmt->execute();
+            
+            $login_success = "Login successful! Redirecting...";
+            echo "<script>setTimeout(function() { window.location.href = 'client/dashboard.php'; }, 1500);</script>";
+        } else {
+            $login_error = "Invalid username or password.";
+        }
+    } else {
+        $login_error = "Invalid username or password.";
+    }
+    $stmt->close();
+}
+
 // Fetch all active services from database
 $services_query = "SELECT * FROM services WHERE status = 'active' ORDER BY created_at DESC";
 $services_result = $con->query($services_query);
@@ -240,6 +289,95 @@ function getIconColor($category) {
     .service-card {
       animation: fadeIn 0.5s ease-out;
     }
+    
+    /* Login Modal Custom Styles */
+    .modal-login {
+      border-radius: 20px;
+    }
+    .modal-login .modal-content {
+      border-radius: 20px;
+      border: none;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .modal-login .modal-header {
+      background: linear-gradient(135deg, #e91e63, #ff6b6b);
+      color: white;
+      border-radius: 20px 20px 0 0;
+      border: none;
+      padding: 20px;
+    }
+    .modal-login .modal-header .btn-close {
+      filter: brightness(0) invert(1);
+    }
+    .modal-login .modal-body {
+      padding: 30px;
+    }
+    .login-icon {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, #e91e63, #ff6b6b);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .login-icon i {
+      font-size: 35px;
+      color: white;
+    }
+    .input-group-custom {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .input-group-custom i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #e91e63;
+      z-index: 10;
+    }
+    .input-group-custom input {
+      padding-left: 45px;
+      height: 50px;
+      border-radius: 25px;
+      border: 1px solid #e0e0e0;
+      transition: all 0.3s ease;
+    }
+    .input-group-custom input:focus {
+      border-color: #e91e63;
+      box-shadow: 0 0 0 0.2rem rgba(233, 30, 99, 0.25);
+    }
+    .btn-login {
+      background: linear-gradient(135deg, #e91e63, #ff6b6b);
+      border: none;
+      border-radius: 25px;
+      padding: 12px;
+      font-weight: bold;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(233, 30, 99, 0.4);
+    }
+    .register-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .register-link a {
+      color: #e91e63;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .register-link a:hover {
+      text-decoration: underline;
+    }
+    .alert-custom {
+      border-radius: 25px;
+      border: none;
+    }
   </style>
 </head>
 <body>
@@ -256,10 +394,96 @@ function getIconColor($category) {
         <li class="nav-item"><a href="#services" class="nav-link">Services</a></li>
         <li class="nav-item"><a href="#about" class="nav-link">About</a></li>
         <li class="nav-item"><a href="#booking" class="nav-link">Book</a></li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#loginModal">
+            <i class="bi bi-box-arrow-in-right"></i> Log in
+          </a>
+        </li>
       </ul>
     </div>
   </div>
 </nav>
+
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-login">
+      <div class="modal-header">
+        <h5 class="modal-title w-100 text-center" id="loginModalLabel">
+          <i class="bi bi-person-circle me-2"></i>Client Login
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="login-icon">
+          <i class="bi bi-scissors"></i>
+        </div>
+        
+        <?php if ($login_error): ?>
+          <div class="alert alert-danger alert-custom alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <?php echo $login_error; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <?php endif; ?>
+        
+        <?php if ($login_success): ?>
+          <div class="alert alert-success alert-custom alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <?php echo $login_success; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <?php endif; ?>
+        
+        <form method="POST" action="">
+          <input type="hidden" name="login_action" value="1">
+          
+          <div class="input-group-custom">
+            <i class="bi bi-person"></i>
+            <input type="text" class="form-control" name="username" placeholder="Username" required autocomplete="off">
+          </div>
+          
+          <div class="input-group-custom">
+            <i class="bi bi-lock"></i>
+            <input type="password" class="form-control" name="password" placeholder="Password" required>
+          </div>
+          
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="rememberMe">
+            <label class="form-check-label" for="rememberMe">
+              Remember me
+            </label>
+          </div>
+          
+          <button type="submit" class="btn btn-login text-white w-100">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Login
+          </button>
+          
+          <div class="register-link">
+            <p class="mb-0">Don't have an account? <a href="client/register.php">Register here</a></p>
+            <p class="mt-2 mb-0">
+              <a href="client/forgot-password.php" class="small">Forgot password?</a>
+            </p>
+          </div>
+        </form>
+        
+        <hr class="my-4">
+        
+        <div class="text-center">
+          <p class="text-muted small mb-0">Or continue with</p>
+          <div class="d-flex justify-content-center gap-3 mt-3">
+            <a href="#" class="btn btn-outline-danger rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+              <i class="bi bi-google"></i>
+            </a>
+            <a href="#" class="btn btn-outline-primary rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+              <i class="bi bi-facebook"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Hero Section -->
 <section class="hero">
@@ -285,16 +509,16 @@ function getIconColor($category) {
             <div class="card service-card w-100">
               <div class="card-body d-flex flex-column">
                 <div class="text-center">
-                  <!-- <div class="service-icon <?php echo getIconColor($service['category'] ?? ''); ?>">
+                  <div class="service-icon <?php echo getIconColor($service['category'] ?? ''); ?>">
                     <i class="bi <?php echo getServiceIcon($service['service_name'], $service['category'] ?? ''); ?>"></i>
-                  </div> -->
+                  </div>
                   <h4 class="mt-3 mb-2"><?php echo htmlspecialchars($service['service_name']); ?></h4>
                   <div class="duration-badge">
                     <i class="bi bi-clock"></i> <?php echo $service['duration']; ?> minutes
                   </div>
-                  <!-- <div class="price-tag">
+                  <div class="price-tag">
                     ₱<?php echo number_format($service['price'], 2); ?>
-                  </div> -->
+                  </div>
                   <p class="service-description">
                     <?php 
                     $desc = htmlspecialchars($service['description']);
@@ -302,11 +526,11 @@ function getIconColor($category) {
                     ?>
                   </p>
                 </div>
-                <!-- <div class="service-footer text-center mt-auto">
+                <div class="service-footer text-center mt-auto">
                   <a href="./assets/pages/appointment.php?service=<?php echo $service['service_id']; ?>" class="btn btn-service-book">
                     <i class="bi bi-calendar-plus"></i> Book Now
                   </a>
-                </div> -->
+                </div>
               </div>
             </div>
           </div>
@@ -436,6 +660,14 @@ function getIconColor($category) {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+  // Auto-show modal if there was a login error
+  <?php if ($login_error): ?>
+    document.addEventListener('DOMContentLoaded', function() {
+      var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+      loginModal.show();
+    });
+  <?php endif; ?>
+  
   // Add smooth scrolling for anchor links
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
