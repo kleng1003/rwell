@@ -19,6 +19,12 @@ $archived_count_query = mysqli_query($con, "SELECT COUNT(*) as total FROM employ
 $archived_count = mysqli_fetch_assoc($archived_count_query)['total'];
 ?>
 
+<style>
+    .summary-card:hover {
+        transform: translateY(-3px);
+    }
+</style>
+
 <div class="row">
     <div class="col-lg-12">
         <h1 class="page-header" style="font-weight: 600; color: #464660;">
@@ -36,7 +42,7 @@ $archived_count = mysqli_fetch_assoc($archived_count_query)['total'];
                     <div class="col-xs-3">
                         <i class="fas fa-user-check fa-4x"></i>
                     </div>
-                    <div class="col-xs-9 text-right">
+                    <div class="col-xs-9 text-right summary-card">
                         <div style="font-size: 28px; font-weight: 700;"><?php echo $active_count; ?></div>
                         <div>Active Employees</div>
                     </div>
@@ -51,7 +57,7 @@ $archived_count = mysqli_fetch_assoc($archived_count_query)['total'];
                     <div class="col-xs-3">
                         <i class="fas fa-archive fa-4x"></i>
                     </div>
-                    <div class="col-xs-9 text-right">
+                    <div class="col-xs-9 text-right summary-card">
                         <div style="font-size: 28px; font-weight: 700;"><?php echo $archived_count; ?></div>
                         <div>Archived Employees</div>
                     </div>
@@ -66,7 +72,7 @@ $archived_count = mysqli_fetch_assoc($archived_count_query)['total'];
                     <div class="col-xs-3">
                         <i class="fas fa-calendar fa-4x"></i>
                     </div>
-                    <div class="col-xs-9 text-right">
+                    <div class="col-xs-9 text-right summary-card">
                         <div style="font-size: 28px; font-weight: 700;"><?php echo date('Y'); ?></div>
                         <div>Current Year</div>
                     </div>

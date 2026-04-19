@@ -84,7 +84,7 @@ $lowstock_products_query = mysqli_query($con, "
 <style>
     /* Dashboard Styles - Matching your template's color scheme */
     .dashboard-header {
-        background: linear-gradient(135deg, #191919 0%, #2d2d2d 100%);
+        background: linear-gradient(135deg, #2c3e50, #464660);
         color: white;
         padding: 25px 20px;
         border-radius: 8px;
@@ -96,7 +96,7 @@ $lowstock_products_query = mysqli_query($con, "
         border-radius: 8px;
         overflow: hidden;
         transition: all 0.3s ease;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
         border: none;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         background: #fff;
@@ -219,16 +219,16 @@ $lowstock_products_query = mysqli_query($con, "
         margin-right: 10px;
         font-weight: 500;
         transition: all 0.3s;
-        border: 1px solid #dee2e6;
-        background: white;
+        border: 1px solid #ddd;
+        background: #fff;
         color: #495057;
         display: inline-block;
         margin-bottom: 10px;
     }
     
     .action-btn:hover {
-        background: #191919;
-        color: white;
+        background: #464660;
+        color: #fff;
         border-color: #191919;
         text-decoration: none;
     }

@@ -64,8 +64,9 @@ $employee_count = mysqli_fetch_assoc($employee_count)['total'];
     }
     
     .filter-btn {
-        border-radius: 4px;
-        padding: 6px 15px;
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-weight: 500;
         margin-right: 5px;
         border: 1px solid #dee2e6;
         background: white;
@@ -76,13 +77,13 @@ $employee_count = mysqli_fetch_assoc($employee_count)['total'];
     }
     
     .filter-btn.active {
-        background: #191919;
+        background: #464660;
         color: white;
         border-color: #191919;
     }
     
     .filter-btn:hover {
-        background: #f8f9fa;
+        background: #757575;
     }
     
     .badge-count {
