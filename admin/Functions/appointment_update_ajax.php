@@ -87,7 +87,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'time' => date('h:i A', strtotime($appointment_time)),
                 'purpose' => htmlspecialchars($purpose),
                 'status' => $status,
-                'status_badge' => '<span class="status-badge status-' . $status . '">' . ucfirst($status) . '</span>'
+                'status_badge' => '
+                    <div class="dropdown">
+                        <button class="btn btn-sm dropdown-toggle status-btn status-' . $status . '" 
+                                type="button" 
+                                data-toggle="dropdown" 
+                                aria-haspopup="true" 
+                                aria-expanded="false">
+                            ' . ucfirst($status) . '
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-right status-menu">
+                            <li><a href="#" class="changeStatusBtn" data-id="' . $appointment_id . '" data-status="pending">Pending</a></li>
+                            <li><a href="#" class="changeStatusBtn" data-id="' . $appointment_id . '" data-status="approved">Approved</a></li>
+                            <li><a href="#" class="changeStatusBtn" data-id="' . $appointment_id . '" data-status="completed">Completed</a></li>
+                            <li><a href="#" class="changeStatusBtn" data-id="' . $appointment_id . '" data-status="cancelled">Cancelled</a></li>
+                        </ul>
+                    </div>'
             ]
         ]);
         exit();

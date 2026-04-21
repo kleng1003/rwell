@@ -85,6 +85,52 @@ $result = $con->query($sql);
         margin: 0 2px;
     }
     
+    .status-btn {
+        border: none;
+        border-radius: 50px;
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        min-width: 110px;
+        text-align: center;
+    }
+
+    .status-btn.status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-btn.status-approved {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .status-btn.status-completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-btn.status-cancelled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-menu {
+        min-width: 140px;
+        border-radius: 8px;
+        padding: 5px 0;
+    }
+
+    .status-menu li a {
+        display: block;
+        padding: 8px 14px;
+        color: #333;
+        text-decoration: none;
+    }
+
+    .status-menu li a:hover {
+        background: #f8f9fa;
+    }
     .appointment-row {
         transition: background 0.3s;
     }
@@ -165,7 +211,7 @@ $result = $con->query($sql);
                                 <th>Date & Time</th>
                                 <th>Customer</th>
                                 <th>Employee</th>
-                                <th>Purpose</th>
+                                
                                 <th>Status</th>
                                 <th style="width: 120px;">Actions</th>
                             </thead>
@@ -190,11 +236,23 @@ $result = $con->query($sql);
                                             <span class="text-muted">Not assigned</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td><?= htmlspecialchars($row['purpose'] ?: '—'); ?></td>
-                                    <td>
-                                        <span class="status-badge status-<?= $row['status']; ?>">
-                                            <?= ucfirst($row['status']); ?>
-                                        </span>
+                                    
+                                    <td class="status-cell">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm dropdown-toggle status-btn status-<?= $row['status']; ?>" 
+                                                    type="button" 
+                                                    data-toggle="dropdown" 
+                                                    aria-haspopup="true" 
+                                                    aria-expanded="false">
+                                                <?= ucfirst($row['status']); ?>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-right status-menu">
+                                                <li><a href="#" class="changeStatusBtn" data-id="<?= $row['appointment_id']; ?>" data-status="pending">Pending</a></li>
+                                                <li><a href="#" class="changeStatusBtn" data-id="<?= $row['appointment_id']; ?>" data-status="approved">Approved</a></li>
+                                                <li><a href="#" class="changeStatusBtn" data-id="<?= $row['appointment_id']; ?>" data-status="completed">Completed</a></li>
+                                                <li><a href="#" class="changeStatusBtn" data-id="<?= $row['appointment_id']; ?>" data-status="cancelled">Cancelled</a></li>
+                                            </ul>
+                                        </div>
                                     </td>
                                     <td>
                                         <button class="btn btn-warning btn-sm action-btn editAppointmentBtn" 
@@ -204,14 +262,14 @@ $result = $con->query($sql);
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         
-                                        <button class="btn btn-danger btn-sm action-btn cancelAppointmentBtn" 
+                                        <!-- <button class="btn btn-danger btn-sm action-btn cancelAppointmentBtn" 
                                                 data-id="<?= $row['appointment_id']; ?>"
                                                 data-customer="<?= htmlspecialchars($row['customer_name']); ?>"
                                                 data-date="<?= $row['appointment_date']; ?>"
                                                 data-toggle="tooltip" 
                                                 title="Cancel Appointment">
                                             <i class="fas fa-times-circle"></i>
-                                        </button>
+                                        </button> -->
                                         
                                         <a href="appointment-view.php?id=<?= $row['appointment_id']; ?>" 
                                            class="btn btn-info btn-sm action-btn" 
@@ -269,6 +327,46 @@ $result = $con->query($sql);
 <script src="../js/sweetalert2.all.min.js"></script>
 
 <script>
+    // Change appointment status directly from table
+$(document).on('click', '.changeStatusBtn', function(e) {
+    e.preventDefault();
+
+    var appointmentId = $(this).data('id');
+    var newStatus = $(this).data('status');
+    var row = $("tr[data-id='" + appointmentId + "']");
+    var statusCell = row.find(".status-cell");
+
+    $.ajax({
+        url: '../Functions/appointment_status_ajax.php',
+        type: 'POST',
+        data: {
+            appointment_id: appointmentId,
+            new_status: newStatus
+        },
+        dataType: 'json',
+        success: function(res) {
+            if (res.status === 'success') {
+                statusCell.html(res.status_badge);
+                row.attr('data-status', res.new_status);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Updated!',
+                    text: res.message,
+                    timer: 1200,
+                    showConfirmButton: false
+                });
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+        },
+        error: function(xhr) {
+            console.log(xhr.responseText);
+            Swal.fire('Error', 'Failed to update appointment status', 'error');
+        }
+    });
+});
+
 $(document).ready(function() {
     // Initialize DataTable
     var table = $('#appointmentsTable').DataTable({
@@ -282,13 +380,17 @@ $(document).ready(function() {
     });
 
     // Status Filter
+    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+        var selectedStatus = $('#statusFilter').val();
+        var rowNode = table.row(dataIndex).node();
+        var rowStatus = $(rowNode).attr('data-status');
+
+        if (!selectedStatus) return true;
+        return rowStatus === selectedStatus;
+    });
+
     $('#statusFilter').on('change', function() {
-        var status = $(this).val();
-        if (status === '') {
-            table.column(4).search('').draw();
-        } else {
-            table.column(4).search('^' + status + '$', true, false).draw();
-        }
+        table.draw();
     });
 
     // Date Filter
@@ -358,17 +460,16 @@ $(document).ready(function() {
                     $('#editAppointmentModal').modal('hide');
 
                     // 🔥 UPDATE TABLE ROW
-                    var row = $("tr[data-id='" + res.data.appointment_id + "']");
+                   var row = $("tr[data-id='" + res.data.appointment_id + "']");
 
                     row.find("td:eq(0)").html(
                         '<div><i class="fas fa-calendar-alt"></i> ' + res.data.date + '</div>' +
                         '<div class="text-muted"><i class="fas fa-clock"></i> ' + res.data.time + '</div>'
                     );
 
-                    row.find("td:eq(3)").text(res.data.purpose);
-                    row.find("td:eq(4)").html(res.data.status_badge);
+                    row.find(".status-cell").html(res.data.status_badge);
+                    row.attr("data-status", res.data.status);
 
-                    // 🔥 HIGHLIGHT EFFECT
                     row.css("background-color", "#d4edda");
                     setTimeout(function() {
                         row.css("background-color", "");
