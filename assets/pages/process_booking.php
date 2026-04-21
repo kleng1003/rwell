@@ -1,5 +1,6 @@
 <?php
-// Enable error reporting for debugging
+session_start();
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -14,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] != 'POST') {
 }
 
 try {
-    // Get form data
     $first_name = isset($_POST['first_name']) ? trim(mysqli_real_escape_string($con, $_POST['first_name'])) : '';
     $last_name = isset($_POST['last_name']) ? trim(mysqli_real_escape_string($con, $_POST['last_name'])) : '';
     $phone = isset($_POST['customer_phone']) ? trim(mysqli_real_escape_string($con, $_POST['customer_phone'])) : '';
@@ -24,14 +24,12 @@ try {
     $date = isset($_POST['appointment_date']) ? mysqli_real_escape_string($con, $_POST['appointment_date']) : '';
     $time = isset($_POST['appointment_time']) ? mysqli_real_escape_string($con, $_POST['appointment_time']) : '';
     $purpose = isset($_POST['purpose']) ? mysqli_real_escape_string($con, $_POST['purpose']) : '';
-    
-    // Get multiple service IDs
+
     $service_ids = isset($_POST['service_ids']) ? $_POST['service_ids'] : [];
     if (is_string($service_ids)) {
         $service_ids = json_decode($service_ids, true);
     }
 
-    // Validate required fields
     if (empty($first_name) || empty($phone) || empty($date) || empty($time)) {
         echo json_encode(['status' => 'error', 'message' => 'Please fill in all required fields']);
         exit();
@@ -42,118 +40,139 @@ try {
         exit();
     }
 
-    // Start transaction
     mysqli_begin_transaction($con);
 
-    // Check if customer exists by phone number
     $customer_id = null;
-    if (isset($_SESSION['customer_id'])) {
-        $customer_id = $_SESSION['customer_id'];
+
+    if (isset($_SESSION['customer_id']) && !empty($_SESSION['customer_id'])) {
+        $customer_id = (int)$_SESSION['customer_id'];
     }
-    
-    if (mysqli_num_rows($customer_query) > 0) {
-        // Customer exists - update their info
-        $customer = mysqli_fetch_assoc($customer_query);
-        $customer_id = $customer['customer_id'];
-        
-        // Build update fields
-        $update_fields = [];
-        if (!empty($first_name)) $update_fields[] = "first_name = '$first_name'";
-        if (!empty($last_name)) $update_fields[] = "last_name = '$last_name'";
-        if (!empty($email)) $update_fields[] = "email = '$email'";
-        if (!empty($address)) $update_fields[] = "address = '$address'";
-        
-        if (!empty($update_fields)) {
-            $update_sql = "UPDATE customers SET " . implode(", ", $update_fields) . " WHERE customer_id = $customer_id";
-            mysqli_query($con, $update_sql);
+
+    // If no linked customer yet, try find by phone
+    if (!$customer_id) {
+        $customer_query = mysqli_query($con, "SELECT customer_id FROM customers WHERE phone = '$phone' LIMIT 1");
+
+        if (!$customer_query) {
+            throw new Exception("Failed to lookup customer: " . mysqli_error($con));
         }
-    } else {
-        // Create new customer with first_name and last_name
-        $insert_customer = "INSERT INTO customers (first_name, last_name, phone, email, address, status, created_at) 
-                           VALUES ('$first_name', '$last_name', '$phone', " . 
-                           (!empty($email) ? "'$email'" : "NULL") . ", " . 
-                           (!empty($address) ? "'$address'" : "NULL") . ", 'active', NOW())";
-        
-        if (!mysqli_query($con, $insert_customer)) {
-            throw new Exception("Failed to add customer: " . mysqli_error($con));
+
+        if (mysqli_num_rows($customer_query) > 0) {
+            $customer = mysqli_fetch_assoc($customer_query);
+            $customer_id = (int)$customer['customer_id'];
+
+            $update_fields = [];
+            if (!empty($first_name)) $update_fields[] = "first_name = '$first_name'";
+            if (!empty($last_name)) $update_fields[] = "last_name = '$last_name'";
+            if (!empty($email)) $update_fields[] = "email = '$email'";
+            if (!empty($address)) $update_fields[] = "address = '$address'";
+
+            if (!empty($update_fields)) {
+                $update_sql = "UPDATE customers SET " . implode(", ", $update_fields) . " WHERE customer_id = $customer_id";
+                if (!mysqli_query($con, $update_sql)) {
+                    throw new Exception("Failed to update customer: " . mysqli_error($con));
+                }
+            }
+        } else {
+            $insert_customer = "INSERT INTO customers (first_name, last_name, phone, email, address, status, created_at)
+                               VALUES (
+                                   '$first_name',
+                                   '$last_name',
+                                   '$phone',
+                                   " . (!empty($email) ? "'$email'" : "NULL") . ",
+                                   " . (!empty($address) ? "'$address'" : "NULL") . ",
+                                   'active',
+                                   NOW()
+                               )";
+
+            if (!mysqli_query($con, $insert_customer)) {
+                throw new Exception("Failed to add customer: " . mysqli_error($con));
+            }
+
+            $customer_id = mysqli_insert_id($con);
         }
-        $customer_id = mysqli_insert_id($con);
     }
-    
+
     if (!$customer_id) {
         throw new Exception("Failed to identify or create customer record");
     }
-    
-    // Check for double booking
+
     $employee_condition = $employee_id ? "employee_id = $employee_id" : "employee_id IS NULL";
+
     $check_slot = mysqli_query($con, "
-        SELECT appointment_id FROM appointments 
+        SELECT appointment_id
+        FROM appointments
         WHERE $employee_condition
-        AND appointment_date = '$date'
-        AND appointment_time = '$time'
-        AND status NOT IN ('cancelled', 'completed')
+          AND appointment_date = '$date'
+          AND appointment_time = '$time'
+          AND status NOT IN ('cancelled', 'completed')
     ");
-    
+
+    if (!$check_slot) {
+        throw new Exception("Failed to check time slot: " . mysqli_error($con));
+    }
+
     if (mysqli_num_rows($check_slot) > 0) {
         throw new Exception("This time slot is already booked. Please choose another time.");
     }
 
-    // After getting $customer_id, check if this booking is from a logged-in client
     if (isset($_SESSION['client_id'])) {
-        $client_id = $_SESSION['client_id'];
-        
-        // Update the client account with the customer_id if not already set
-        $update_client =    "UPDATE tbl_client_accounts 
-                            SET customer_id = $customer_id 
-                            WHERE client_id = $client_id";
-        mysqli_query($con, $update_client);
-        
-        // Also store in session
+        $client_id = (int)$_SESSION['client_id'];
+
+        $update_client = "UPDATE tbl_client_accounts
+                          SET customer_id = $customer_id
+                          WHERE client_id = $client_id";
+
+        if (!mysqli_query($con, $update_client)) {
+            throw new Exception("Failed to update client account: " . mysqli_error($con));
+        }
+
         $_SESSION['customer_id'] = $customer_id;
     }
-    
-    // Insert appointment
+
     $employee_id_value = $employee_id ? "'$employee_id'" : "NULL";
     $purpose_value = !empty($purpose) ? "'$purpose'" : "NULL";
-    
-    $insert_appointment = "INSERT INTO appointments (customer_id, employee_id, appointment_date, appointment_time, purpose, status, created_at) 
-                          VALUES ('$customer_id', $employee_id_value, '$date', '$time', $purpose_value, 'pending', NOW())";
-    
+
+    $insert_appointment = "INSERT INTO appointments
+        (customer_id, employee_id, appointment_date, appointment_time, purpose, status, created_at)
+        VALUES
+        ('$customer_id', $employee_id_value, '$date', '$time', $purpose_value, 'pending', NOW())";
+
     if (!mysqli_query($con, $insert_appointment)) {
         throw new Exception("Failed to book appointment: " . mysqli_error($con));
     }
-    
+
     $appointment_id = mysqli_insert_id($con);
-    
-    // Insert multiple services
+
     foreach ($service_ids as $service_id) {
         $service_id = (int)$service_id;
-        $insert_service = "INSERT INTO customer_services (customer_id, service_id, appointment_id) 
-                          VALUES ('$customer_id', '$service_id', '$appointment_id')";
-        
+
+        $insert_service = "INSERT INTO customer_services (customer_id, service_id, appointment_id)
+                           VALUES ('$customer_id', '$service_id', '$appointment_id')";
+
         if (!mysqli_query($con, $insert_service)) {
             throw new Exception("Failed to add service: " . mysqli_error($con));
         }
     }
-    
-    // Commit transaction
+
     mysqli_commit($con);
-    
-    // Get customer name for response
+
     $customer_name_query = mysqli_query($con, "SELECT first_name, last_name FROM customers WHERE customer_id = $customer_id");
-    $customer_data = mysqli_fetch_assoc($customer_name_query);
-    $customer_full_name = trim($customer_data['first_name'] . ' ' . $customer_data['last_name']);
-    
+    $customer_data = $customer_name_query ? mysqli_fetch_assoc($customer_name_query) : null;
+    $customer_full_name = $customer_data ? trim(($customer_data['first_name'] ?? '') . ' ' . ($customer_data['last_name'] ?? '')) : '';
+
     echo json_encode([
-        'status' => 'success', 
+        'status' => 'success',
         'message' => 'Appointment booked successfully!',
         'appointment_id' => $appointment_id,
         'customer_id' => $customer_id,
         'customer_name' => $customer_full_name
     ]);
-    
-} catch (Exception $e) {
+
+} catch (Throwable $e) {
     mysqli_rollback($con);
-    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    echo json_encode([
+        'status' => 'error',
+        'message' => $e->getMessage()
+    ]);
 }
 ?>
