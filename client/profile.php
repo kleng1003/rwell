@@ -204,16 +204,46 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_account'])) {
     }
 }
 
-// Get appointment statistics - Note: client accounts use different ID than customers table
-// This may need adjustment based on how clients are linked to appointments
-$stats_query = "SELECT 
-    COUNT(*) as total_appointments,
-    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_appointments,
-    SUM(CASE WHEN status IN ('pending', 'approved') AND appointment_date >= CURDATE() THEN 1 ELSE 0 END) as upcoming_appointments,
-    SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_appointments
-    FROM appointments WHERE customer_id = $client_id";
-$stats_result = mysqli_query($con, $stats_query);
-$stats = mysqli_fetch_assoc($stats_result);
+// Get linked customer_id first
+$customer_id = null;
+
+if (isset($_SESSION['customer_id']) && !empty($_SESSION['customer_id'])) {
+    $customer_id = (int) $_SESSION['customer_id'];
+} else {
+    $cust_query = mysqli_query($con, "SELECT customer_id FROM tbl_client_accounts WHERE client_id = $client_id LIMIT 1");
+    if ($cust_query && mysqli_num_rows($cust_query) > 0) {
+        $cust = mysqli_fetch_assoc($cust_query);
+        if (!empty($cust['customer_id'])) {
+            $customer_id = (int) $cust['customer_id'];
+            $_SESSION['customer_id'] = $customer_id;
+        }
+    }
+}
+
+// Default stats
+$stats = [
+    'total_appointments' => 0,
+    'completed_appointments' => 0,
+    'upcoming_appointments' => 0,
+    'cancelled_appointments' => 0
+];
+
+if ($customer_id) {
+    $stats_query = "
+        SELECT 
+            COUNT(*) as total_appointments,
+            SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_appointments,
+            SUM(CASE WHEN status IN ('pending', 'approved', 'confirmed') AND appointment_date >= CURDATE() THEN 1 ELSE 0 END) as upcoming_appointments,
+            SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_appointments
+        FROM appointments
+        WHERE customer_id = $customer_id
+    ";
+
+    $stats_result = mysqli_query($con, $stats_query);
+    if ($stats_result) {
+        $stats = mysqli_fetch_assoc($stats_result);
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -570,15 +600,15 @@ $stats = mysqli_fetch_assoc($stats_result);
                     <div class="px-3">
                         <h6 class="text-muted mb-3">Appointment Summary</h6>
                         <div class="stats-card">
-                            <div class="stats-number"><?php echo $stats['total_appointments'] ?: 0; ?></div>
+                            <div class="stats-number"><?php echo (int)($stats['total_appointments'] ?? 0); ?></div>
                             <div class="stats-label">Total Appointments</div>
                         </div>
                         <div class="stats-card green">
-                            <div class="stats-number"><?php echo $stats['upcoming_appointments'] ?: 0; ?></div>
+                            <div class="stats-number"><?php echo (int)($stats['upcoming_appointments'] ?? 0); ?></div>
                             <div class="stats-label">Upcoming</div>
                         </div>
                         <div class="stats-card orange">
-                            <div class="stats-number"><?php echo $stats['completed_appointments'] ?: 0; ?></div>
+                            <div class="stats-number"><?php echo (int)($stats['completed_appointments'] ?? 0); ?></div>
                             <div class="stats-label">Completed</div>
                         </div>
                     </div>
@@ -711,37 +741,6 @@ $stats = mysqli_fetch_assoc($stats_result);
                             </button>
                         </form>
                         
-                        <!-- Delete Account -->
-                        <!-- <div class="delete-zone">
-                            <h5><i class="bi bi-exclamation-triangle-fill me-2"></i>Delete Account</h5>
-                            <p class="text-muted mb-3">Once you delete your account, there is no going back. Please be certain.</p>
-                            
-                            <button class="btn btn-outline-danger" type="button" data-bs-toggle="collapse" data-bs-target="#deleteAccountForm">
-                                <i class="bi bi-trash me-2"></i>Delete My Account
-                            </button>
-                            
-                            <div class="collapse mt-3" id="deleteAccountForm">
-                                <form method="POST" action="?tab=security">
-                                    <input type="hidden" name="delete_account" value="1">
-                                    
-                                    <div class="form-group">
-                                        <label class="form-label">Type "DELETE" to confirm</label>
-                                        <input type="text" class="form-control" name="confirm_delete" 
-                                               placeholder="DELETE" required>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="form-label">Enter your password</label>
-                                        <input type="password" class="form-control" name="delete_password" required>
-                                    </div>
-                                    
-                                    <button type="submit" class="btn btn-danger" 
-                                            onclick="return confirm('Are you absolutely sure? This action cannot be undone!');">
-                                        <i class="bi bi-trash-fill me-2"></i>Permanently Delete Account
-                                    </button>
-                                </form>
-                            </div>
-                        </div> -->
                         
                     <?php endif; ?>
                 </div>
