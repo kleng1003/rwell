@@ -415,34 +415,21 @@ $archived_count = mysqli_fetch_assoc($archived_count_query)['total'];
 <?php endif; ?>
 
 <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-6">
         <div class="stat-card text-center">
             <div class="stat-icon"><i class="fas fa-spa"></i></div>
             <div class="stat-number"><?php echo $stats['total'] ?: 0; ?></div>
             <div>Total Services</div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-6">
         <div class="stat-card text-center">
             <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
             <div class="stat-number"><?php echo $stats['active'] ?: 0; ?></div>
             <div>Active Services</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="stat-card text-center">
-            <div class="stat-icon"><i class="fas fa-tags"></i></div>
-            <div class="stat-number">₱<?php echo number_format($stats['avg_price'] ?: 0, 2); ?></div>
-            <div>Average Price</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card text-center">
-            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
-            <div class="stat-number">₱<?php echo number_format($stats['max_price'] ?: 0, 2); ?></div>
-            <div>Highest Price</div>
-        </div>
-    </div>
+
 </div>
 
 <div class="row mb-3 filter-row">
