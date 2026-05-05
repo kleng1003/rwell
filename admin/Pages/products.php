@@ -2,11 +2,32 @@
 include_once('../include/template.php');
 include_once('../include/connection.php');
 
-// Fetch all active products with supplier info
-$sql = "SELECT p.*, s.company_name AS supplier_name 
+// Get the active tab/filter
+$active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'all';
+
+// Build SQL based on tab
+$where_clause = "";
+if ($active_tab == 'available') {
+    $where_clause = "WHERE p.status = 'available'";
+} elseif ($active_tab == 'unavailable') {
+    $where_clause = "WHERE p.status = 'unavailable'";
+} elseif ($active_tab == 'expired') {
+    $where_clause = "WHERE p.expiration_date IS NOT NULL AND p.expiration_date <= CURDATE() AND p.status != 'unavailable'";
+} elseif ($active_tab == 'expiring') {
+    $where_clause = "WHERE p.expiration_date IS NOT NULL AND p.expiration_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND p.status = 'available'";
+}
+
+// Fetch products with supplier info
+$sql = "SELECT p.*, s.company_name AS supplier_name,
+        CASE 
+            WHEN p.expiration_date IS NOT NULL AND p.expiration_date <= CURDATE() THEN 'expired'
+            WHEN p.expiration_date IS NOT NULL AND p.expiration_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 'expiring'
+            ELSE 'ok'
+        END as expiration_status,
+        DATEDIFF(p.expiration_date, CURDATE()) as days_until_expiry
         FROM products p
         LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
-        WHERE p.status = 'available'
+        $where_clause
         ORDER BY p.product_name ASC";
 $result = $con->query($sql);
 
@@ -22,6 +43,12 @@ $unavailable_count = mysqli_fetch_assoc($unavailable_count)['total'];
 
 $low_stock_count = mysqli_query($con, "SELECT COUNT(*) as total FROM products WHERE stock < 10 AND status = 'available'");
 $low_stock_count = mysqli_fetch_assoc($low_stock_count)['total'];
+
+$expired_count = mysqli_query($con, "SELECT COUNT(*) as total FROM products WHERE expiration_date IS NOT NULL AND expiration_date <= CURDATE() AND status = 'available'");
+$expired_count = mysqli_fetch_assoc($expired_count)['total'];
+
+$expiring_count = mysqli_query($con, "SELECT COUNT(*) as total FROM products WHERE expiration_date IS NOT NULL AND expiration_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND status = 'available'");
+$expiring_count = mysqli_fetch_assoc($expiring_count)['total'];
 
 $total_stock = mysqli_query($con, "SELECT SUM(stock) as total FROM products");
 $total_stock = mysqli_fetch_assoc($total_stock)['total'];
@@ -78,7 +105,81 @@ $categories = mysqli_query($con, "SELECT DISTINCT category FROM products WHERE c
         background: #d4edda;
         color: #155724;
     }
-    
+
+    .expiration-badge {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    .expiration-expired {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .expiration-expiring {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+
+    .expiration-ok {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .expiration-na {
+        color: #6c757d;
+        font-size: 12px;
+    }
+
+    .nav-tabs-custom {
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+
+    .nav-tabs-custom > li > a {
+        color: #6c757d;
+        font-weight: 500;
+        padding: 10px 20px;
+        border: none;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s;
+    }
+
+    .nav-tabs-custom > li > a:hover {
+        background: none;
+        color: #464660;
+        border-bottom-color: #64648c;
+    }
+
+    .nav-tabs-custom > li.active > a {
+        color: #464660;
+        border: none;
+        border-bottom: 3px solid #464660;
+        font-weight: 700;
+    }
+
+    .nav-tabs-custom .badge {
+        margin-left: 5px;
+        font-size: 10px;
+    }
+
+    .badge-danger-custom {
+        background: #dc3545;
+        color: white;
+    }
+
+    .badge-warning-custom {
+        background: #ffc107;
+        color: #191919;
+    }
+        
     .price {
         font-weight: 700;
         color: #28a745;
@@ -189,37 +290,118 @@ $categories = mysqli_query($con, "SELECT DISTINCT category FROM products WHERE c
 <div class="row">
     <div class="col-lg-12">
         <div class="panel panel-default">
+            <div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
             <div class="panel-heading">
+                <!-- Navigation Tabs -->
+                <ul class="nav nav-tabs-custom" style="margin-bottom: 15px; padding: 0;">
+                    <li class="<?= $active_tab == 'all' ? 'active' : ''; ?>">
+                        <a href="?tab=all">
+                            <i class="fas fa-boxes"></i> All Products
+                            <span class="badge"><?= $total_products; ?></span>
+                        </a>
+                    </li>
+                    <li class="<?= $active_tab == 'available' ? 'active' : ''; ?>">
+                        <a href="?tab=available">
+                            <i class="fas fa-check-circle text-success"></i> Available
+                            <span class="badge"><?= $available_count; ?></span>
+                        </a>
+                    </li>
+                    <li class="<?= $active_tab == 'expiring' ? 'active' : ''; ?>">
+                        <a href="?tab=expiring">
+                            <i class="fas fa-exclamation-triangle text-warning"></i> Expiring Soon
+                            <?php if ($expiring_count > 0): ?>
+                                <span class="badge badge-warning-custom"><?= $expiring_count; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <li class="<?= $active_tab == 'expired' ? 'active' : ''; ?>">
+                        <a href="?tab=expired">
+                            <i class="fas fa-skull-crossbones text-danger"></i> Expired
+                            <?php if ($expired_count > 0): ?>
+                                <span class="badge badge-danger-custom"><?= $expired_count; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <li class="<?= $active_tab == 'unavailable' ? 'active' : ''; ?>">
+                        <a href="?tab=unavailable">
+                            <i class="fas fa-times-circle text-muted"></i> Unavailable
+                            <span class="badge"><?= $unavailable_count; ?></span>
+                        </a>
+                    </li>
+                </ul>
+
                 <div class="row">
                     <div class="col-md-6">
-                        <strong><i class="fas fa-list"></i> Product Inventory</strong>
+                        <strong>
+                            <i class="fas fa-list"></i> 
+                            <?php 
+                            $tab_labels = [
+                                'all' => 'All Products',
+                                'available' => 'Available Products',
+                                'unavailable' => 'Unavailable Products',
+                                'expired' => 'Expired Products',
+                                'expiring' => 'Expiring Soon'
+                            ];
+                            echo $tab_labels[$active_tab] ?? 'Product Inventory';
+                            ?>
+                        </strong>
+                        <?php if ($active_tab == 'expired'): ?>
+                            <span class="label label-danger" style="margin-left: 10px;">
+                                <i class="fas fa-exclamation-circle"></i> Action Required
+                            </span>
+                        <?php elseif ($active_tab == 'expiring'): ?>
+                            <span class="label label-warning" style="margin-left: 10px;">
+                                <i class="fas fa-clock"></i> Take Action Soon
+                            </span>
+                        <?php endif; ?>
                     </div>
                     <div class="col-md-6 text-right">
                         <select class="filter-select" id="categoryFilter">
                             <option value="">All Categories</option>
-                            <?php while ($cat = $categories->fetch_assoc()): ?>
+                            <?php 
+                            $categories->data_seek(0); // Reset pointer
+                            while ($cat = $categories->fetch_assoc()): ?>
                                 <option value="<?= htmlspecialchars($cat['category']); ?>">
                                     <?= htmlspecialchars($cat['category']); ?>
                                 </option>
                             <?php endwhile; ?>
                         </select>
                         
-                        <button class="filter-btn active" data-filter="all">All</button>
-                        <button class="filter-btn" data-filter="low">Low Stock</button>
-                        <button class="filter-btn" data-filter="normal">Normal</button>
+                        <!-- <?php if ($active_tab != 'expired' && $active_tab != 'unavailable'): ?>
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="low">Low Stock</button>
+                            <button class="filter-btn" data-filter="normal">Normal</button>
+                        <?php endif; ?> -->
                         
                         <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#addProductModal" style="margin-left: 10px;">
                             <i class="fas fa-plus"></i> Add Product
                         </button>
-                        <!-- <a href="../reports/product-list.php" target="_blank" class="btn btn-primary btn-sm">
-                            <i class="fas fa-print"></i> Print
-                        </a>
-                        <a href="product-archive.php" class="btn btn-warning btn-sm">
-                            <i class="fas fa-archive"></i> Archive
-                        </a> -->
+                        
+                        <?php if ($active_tab == 'expired'): ?>
+                            <a href="expired-products.php" class="btn btn-danger btn-sm" style="margin-left: 5px;">
+                                <i class="fas fa-print"></i> Print Report
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
+
+            <!-- Alert Messages -->
+            <?php if ($active_tab == 'expired'): ?>
+                <div class="alert alert-danger" style="margin: 0; border-radius: 0;">
+                    <i class="fas fa-skull-crossbones"></i>
+                    <strong>Warning:</strong> These products have passed their expiration date. 
+                    Please review and take appropriate action (dispose, return to supplier, or update expiration date).
+                </div>
+            <?php elseif ($active_tab == 'expiring' && $expiring_count > 0): ?>
+                <div class="alert alert-warning" style="margin: 0; border-radius: 0;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Attention:</strong> <?= $expiring_count; ?> product(s) will expire within 30 days. 
+                    Consider running promotions or discounts to sell them before expiration.
+                </div>
+            <?php endif; ?>
 
             <div class="panel-body">
                 <div class="table-responsive">
@@ -231,9 +413,11 @@ $categories = mysqli_query($con, "SELECT DISTINCT category FROM products WHERE c
                                 <th>Category</th>
                                 <th>Price</th>
                                 <th>Stock</th>
+                                <th>Expiration</th>
                                 <th>Status</th>
                                 <th width="140">Actions</th>
-                            </thead>
+                            </tr>
+                        </thead>
                         <tbody id="productsTableBody">
                         <?php if ($result->num_rows > 0): ?>
                             <?php while ($row = $result->fetch_assoc()): 
@@ -243,12 +427,51 @@ $categories = mysqli_query($con, "SELECT DISTINCT category FROM products WHERE c
                                 } elseif ($row['stock'] < 25) {
                                     $stock_class = 'medium';
                                 }
+                                
+                                // Determine expiration display
+                                $expiration_display = '';
+                                $expiration_class = '';
+                                
+                                if (!empty($row['expiration_date'])) {
+                                    $exp_date = $row['expiration_date'];
+                                    $today = date('Y-m-d');
+                                    
+                                    if ($exp_date < $today) {
+                                        // Expired
+                                        $days = abs(floor((strtotime($today) - strtotime($exp_date)) / 86400));
+                                        $expiration_display = '<span class="expiration-badge expiration-expired" title="Expired ' . $days . ' days ago">
+                                            <i class="fas fa-skull-crossbones"></i> Expired ' . $days . 'd ago
+                                        </span>';
+                                    } elseif ($exp_date <= date('Y-m-d', strtotime('+7 days'))) {
+                                        // Critical - within 7 days
+                                        $days = floor((strtotime($exp_date) - strtotime($today)) / 86400);
+                                        $expiration_display = '<span class="expiration-badge expiration-expired" title="Expires in ' . $days . ' days">
+                                            <i class="fas fa-exclamation-circle"></i> ' . $days . ' days left
+                                        </span>';
+                                    } elseif ($exp_date <= date('Y-m-d', strtotime('+30 days'))) {
+                                        // Warning - within 30 days
+                                        $days = floor((strtotime($exp_date) - strtotime($today)) / 86400);
+                                        $expiration_display = '<span class="expiration-badge expiration-expiring" title="Expires in ' . $days . ' days">
+                                            <i class="fas fa-exclamation-triangle"></i> ' . date('M d', strtotime($exp_date)) . ' (' . $days . 'd)
+                                        </span>';
+                                    } else {
+                                        // OK
+                                        $expiration_display = '<span class="expiration-badge expiration-ok">
+                                            <i class="fas fa-calendar-check"></i> ' . date('M d, Y', strtotime($exp_date)) . '
+                                        </span>';
+                                    }
+                                } else {
+                                    $expiration_display = '<span class="expiration-na">—</span>';
+                                }
                             ?>
                                 <tr class="product-row" data-category="<?= htmlspecialchars($row['category']); ?>" data-stock="<?= $row['stock']; ?>" data-id="<?= $row['product_id']; ?>">
                                     <td>
                                         <a href="product-view.php?id=<?= $row['product_id']; ?>" class="text-primary">
                                             <i class="fas fa-box"></i> <?= htmlspecialchars($row['product_name']); ?>
                                         </a>
+                                        <?php if (!empty($row['expiration_date']) && $row['expiration_date'] < date('Y-m-d')): ?>
+                                            <i class="fas fa-exclamation-circle text-danger" title="Expired product"></i>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <?php if ($row['supplier_name']): ?>
@@ -279,9 +502,12 @@ $categories = mysqli_query($con, "SELECT DISTINCT category FROM products WHERE c
                                         <?php endif; ?>
                                     </td>
                                     <td>
+                                        <?= $expiration_display; ?>
+                                    </td>
+                                    <td>
                                         <span class="status-badge status-<?= $row['status']; ?>">
                                             <i class="fas fa-<?= $row['status'] == 'available' ? 'check-circle' : 'times-circle'; ?>"></i>
-                                            <?= $row['status'] == 'available' ? 'Available' : 'Unavailable'; ?>
+                                            <?= ucfirst($row['status']); ?>
                                         </span>
                                     </td>
                                     <td>
@@ -292,27 +518,38 @@ $categories = mysqli_query($con, "SELECT DISTINCT category FROM products WHERE c
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         
-                                        <!-- <button class="btn btn-danger btn-sm action-btn archiveProductBtn" 
-                                                data-id="<?= $row['product_id']; ?>"
-                                                data-name="<?= htmlspecialchars($row['product_name']); ?>"
-                                                data-toggle="tooltip" 
-                                                title="Archive Product">
-                                            <i class="fas fa-archive"></i>
-                                        </button> -->
-                                        
                                         <a href="product-view.php?id=<?= $row['product_id']; ?>" 
-                                           class="btn btn-info btn-sm action-btn" 
-                                           data-toggle="tooltip" 
-                                           title="View Details">
+                                        class="btn btn-info btn-sm action-btn" 
+                                        data-toggle="tooltip" 
+                                        title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        
+                                        <?php if ($active_tab == 'expired'): ?>
+                                            <button class="btn btn-success btn-sm action-btn updateExpiryBtn"
+                                                    data-id="<?= $row['product_id']; ?>"
+                                                    data-name="<?= htmlspecialchars($row['product_name']); ?>"
+                                                    title="Update Expiration Date">
+                                                <i class="fas fa-calendar-plus"></i>
+                                            </button>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="7" class="text-center text-muted">
-                                    <i class="fas fa-box-open"></i> No products found.
+                                <td colspan="8" class="text-center text-muted">
+                                    <i class="fas fa-box-open"></i> 
+                                    <?php 
+                                    $empty_messages = [
+                                        'all' => 'No products found.',
+                                        'available' => 'No available products.',
+                                        'unavailable' => 'No unavailable products.',
+                                        'expired' => '<span class="text-success">No expired products. Great job!</span>',
+                                        'expiring' => 'No products expiring soon.'
+                                    ];
+                                    echo $empty_messages[$active_tab] ?? 'No products found.';
+                                    ?>
                                 </td>
                             </tr>
                         <?php endif; ?>
